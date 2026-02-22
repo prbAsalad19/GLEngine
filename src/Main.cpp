@@ -62,7 +62,7 @@ int main()
 	{
 		glfwPollEvents();
 
-		mat4 model = mat4::create_model_transform(quad_position, 10 * glfwGetTime());
+		mat4 model = mat4::create_model_transform(quad_position, static_cast<float>(10.0f * glfwGetTime()));
 		glUniformMatrix4fv(model_location, 1, GL_FALSE, model.entries);
 
 		glClear(GL_COLOR_BUFFER_BIT);

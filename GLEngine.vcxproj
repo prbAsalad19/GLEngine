@@ -18,6 +18,27 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\algebricOp.cpp" />
+    <ClCompile Include="src\config.cpp" />
+    <ClCompile Include="src\glad.c" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\material.cpp" />
+    <ClCompile Include="src\objLoader.cpp" />
+    <ClCompile Include="src\triangle_mesh.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\algebricOp.h" />
+    <ClInclude Include="include\config.h" />
+    <ClInclude Include="include\material.h" />
+    <ClInclude Include="include\objLoader.h" />
+    <ClInclude Include="include\stb_image.h" />
+    <ClInclude Include="include\triangle_mesh.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\fragment.txt" />
+    <Text Include="shaders\vertex.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -86,6 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -113,6 +135,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,15 +157,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="algebricOp.cpp" />
-    <ClCompile Include="config.cpp" />
-    <ClCompile Include="glad.c" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="material.cpp" />
-    <ClCompile Include="objLoader.cpp" />
-    <ClCompile Include="triangle_mesh.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

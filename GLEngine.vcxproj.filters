@@ -13,28 +13,59 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{d1c2342f-c88e-4f0b-9530-85a89c598b34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="glad.c">
-      <Filter>File di risorse</Filter>
-    </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>File di risorse</Filter>
-    </ClCompile>
-    <ClCompile Include="algebricOp.cpp">
+    <ClCompile Include="src\algebricOp.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="config.cpp">
+    <ClCompile Include="src\config.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="material.cpp">
+    <ClCompile Include="src\Main.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="objLoader.cpp">
+    <ClCompile Include="src\material.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="triangle_mesh.cpp">
+    <ClCompile Include="src\objLoader.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
+    <ClCompile Include="src\triangle_mesh.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\glad.c">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\algebricOp.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="include\config.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="include\material.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="include\objLoader.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stb_image.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="include\triangle_mesh.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\fragment.txt">
+      <Filter>shaders</Filter>
+    </Text>
+    <Text Include="shaders\vertex.txt">
+      <Filter>shaders</Filter>
+    </Text>
   </ItemGroup>
 </Project>
