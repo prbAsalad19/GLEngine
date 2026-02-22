@@ -5,12 +5,13 @@ in vec2 fragmentTexCoord;
 out vec4 screenColor;
 
 uniform sampler2D material; 
-uniform sampler2D mask;		
+uniform sampler2D mask;
+uniform int useMaskAlpha;  // 0 = alpha sempre 1 (opaco), 1 = alpha dalla mask
 
 void main()
 {
 	vec3 baseColor = texture(material, fragmentTexCoord).rgb;
-	float alpha = texture(mask, fragmentTexCoord).r;
+	float alpha = (useMaskAlpha != 0) ? texture(mask, fragmentTexCoord).r : 1.0;
 
 	screenColor = vec4(baseColor, alpha);
 }

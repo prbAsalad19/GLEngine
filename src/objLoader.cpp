@@ -185,32 +185,36 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int>& indices)
         fVertices.push_back(v.normal[2]);
         fVertices.push_back(v.uv[0]);
         fVertices.push_back(v.uv[1]);
-	}
-    gpuVertices = fVertices;
+    }
 
     vertex_count = static_cast<unsigned int>(indices.size());
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, fVertices.size() * sizeof(float), fVertices.data(), GL_STATIC_DRAW);
+
+    // layout: 3 position, 3 normal, 2 uv -> stride = 8 * sizeof(float)
+    // posizione
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(0);
 
+    // normale
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+    // uv
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
     glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Mesh::draw()

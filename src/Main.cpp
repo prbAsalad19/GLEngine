@@ -19,9 +19,21 @@ int main()
 	}
 
 
-	TriangleMesh* triangle = new TriangleMesh();
+	// TriangleMesh* triangle = new TriangleMesh();
 	Material* material = new Material("img/texture.jpg");
 	Material* mask = new Material("img/vignette_texture.jpg");
+	CPUMesh objMesh;
+	if (!MeshLoader::GetObjFileData("assets/teapot.obj", objMesh))
+	{
+		std::cout << "Failed to load OBJ file " << "assets/teapot.obj" << std::endl;
+		glfwDestroyWindow(window);
+		glfwTerminate();
+		return -1;
+	}
+	std::vector<unsigned int> indexMap;
+	std::vector<Vertex> formattedVertices;
+	formattedVertices = MeshLoader::formatForOpenGL(objMesh, indexMap);
+	Mesh* cube = new Mesh(formattedVertices, indexMap);
 
 
 	//creation of the shader program, with error handling
@@ -29,7 +41,7 @@ int main()
 	if (shader == 0)
 	{
 		std::cout << "Shader program creation failed. Uscita." << std::endl;
-		delete triangle;
+		delete cube;
 		glfwDestroyWindow(window);
 		glfwTerminate();
 		return -1;
@@ -40,6 +52,7 @@ int main()
 	
 	glUniform1i(glGetUniformLocation(shader, "material"), 0);
 	glUniform1i(glGetUniformLocation(shader, "mask"), 1);
+	glUniform1i(glGetUniformLocation(shader, "useMaskAlpha"), 0);  // 0 = opaco, 1 = alpha da mask
 
 	Vector3 quad_position = { -0.1f, 0.5f, 0.0f };
 	Vector3 camera_pos = { -5.0f, 0.0f, 3.0f };
@@ -54,9 +67,13 @@ int main()
 	mat4 projection = mat4::create_prospective_projection(45.0f, 640.0f / 480.0f, 0.1f, 10.0f);
 	glUniformMatrix4fv(proj_location, 1, GL_FALSE, projection.entries);
 
-	//enable alpha blending
+	//enable alpha blending and depth test (per cubo 3D)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -65,18 +82,18 @@ int main()
 		mat4 model = mat4::create_model_transform(quad_position, static_cast<float>(10.0f * glfwGetTime()));
 		glUniformMatrix4fv(model_location, 1, GL_FALSE, model.entries);
 
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(shader);
 		material->use(0);
 		mask->use(1);
-		triangle->draw();
+		cube->draw();
 
 		glfwSwapBuffers(window);
 	}
 
 	//resource cleanup
 	glDeleteProgram(shader);
-	delete triangle;
+	delete cube;
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
@@ -91,7 +108,7 @@ unsigned int make_shader(const std::string& vertex_filepath, const std::string& 
 
 	if (vert == 0 || frag == 0)
 	{
-		// se una delle due compilazioni è fallita, pulisco i moduli validi e torno 0
+		// se una delle due compilazioni Ã¨ fallita, pulisco i moduli validi e torno 0
 		if (vert != 0) glDeleteShader(vert);
 		if (frag != 0) glDeleteShader(frag);
 		return 0;

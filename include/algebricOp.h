@@ -21,6 +21,8 @@ struct mat4
     float entries[16];
     static mat4 create_matrix_transform(Vector3 translation);
     static mat4 create_z_rotation(float angle);
+    static mat4 create_x_rotation(float angle);
+    static mat4 create_y_rotation(float angle);
     static mat4 create_model_transform(Vector3 pos, float angle);
     static mat4 create_look_at(Vector3 from, Vector3 to);
     static mat4 create_prospective_projection(float fovy, float aspect, float near, float far);

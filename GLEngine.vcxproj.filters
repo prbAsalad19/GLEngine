@@ -16,6 +16,9 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{d1c2342f-c88e-4f0b-9530-85a89c598b34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="assets">
+      <UniqueIdentifier>{372a5727-1b08-4108-815c-9a1e1189b8fc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\algebricOp.cpp">
