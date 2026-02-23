@@ -1,5 +1,25 @@
 #include "algebricOp.h"
 
+mat4 mat4::operator*(const mat4& other) const
+{
+	// Column-major multiplication: (this) * other
+	// index = col*4 + row
+	mat4 result;
+	for (int col = 0; col < 4; ++col)
+	{
+		for (int row = 0; row < 4; ++row)
+		{
+			float sum = 0.0f;
+			for (int k = 0; k < 4; ++k)
+			{
+				sum += entries[k * 4 + row] * other.entries[col * 4 + k];
+			}
+			result.entries[col * 4 + row] = sum;
+		}
+	}
+	return result;
+}
+
 mat4 mat4::create_matrix_transform(Vector3 translation)
 {
 	mat4 matrix;

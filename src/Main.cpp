@@ -11,7 +11,7 @@ GLFWwindow* openGLEngineInit(int width, int height, const char* title);
 int main()
 {
 	//init and error handling
-	GLFWwindow* window = openGLEngineInit(800, 800, "bruh");
+	GLFWwindow* window = openGLEngineInit(1280, 720, "bruh");
 	if (window == nullptr)
 	{
 		std::cout << "OpenGL initialization failed. Exiting." << std::endl;
@@ -54,7 +54,7 @@ int main()
 	glUniform1i(glGetUniformLocation(shader, "mask"), 1);
 	glUniform1i(glGetUniformLocation(shader, "useMaskAlpha"), 0);  // 0 = opaco, 1 = alpha da mask
 
-	Vector3 quad_position = { -0.1f, 0.5f, 0.0f };
+	Vector3 quad_position = { -0.1f, 0.5f, -1.0f };
 	Vector3 camera_pos = { -5.0f, 0.0f, 3.0f };
 	Vector3 camera_target = { 0.0f, 0.0f, 0.0f };
 	unsigned int model_location = glGetUniformLocation(shader, "model");
@@ -63,8 +63,9 @@ int main()
 
 	mat4 view = mat4::create_look_at(camera_pos, camera_target);
 	glUniformMatrix4fv(view_location, 1, GL_FALSE, view.entries);
-
-	mat4 projection = mat4::create_prospective_projection(45.0f, 640.0f / 480.0f, 0.1f, 10.0f);
+	int winWidth, winHeight;
+	glfwGetWindowSize(window, &winWidth, &winHeight);
+	mat4 projection = mat4::create_prospective_projection(45.0f, static_cast<float>(winWidth) / static_cast<float>(winHeight), 0.1f, 10.0f);
 	glUniformMatrix4fv(proj_location, 1, GL_FALSE, projection.entries);
 
 	//enable alpha blending and depth test (per cubo 3D)
@@ -78,8 +79,18 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
+		int winWidth, winHeight;
+		glfwGetWindowSize(window, &winWidth, &winHeight);
+		mat4 projection = mat4::create_prospective_projection(
+			45.0f,
+			static_cast<float>(winWidth) / static_cast<float>(winHeight),
+			0.1f,
+			10.0f
+		);
+		glUniformMatrix4fv(proj_location, 1, GL_FALSE, projection.entries);
 
-		mat4 model = mat4::create_model_transform(quad_position, static_cast<float>(10.0f * glfwGetTime()));
+		mat4 modelR_x = mat4::create_x_rotation(90.0f);
+		mat4 model = mat4::create_matrix_transform(quad_position) * mat4::create_z_rotation(glfwGetTime() * 10) * modelR_x;
 		glUniformMatrix4fv(model_location, 1, GL_FALSE, model.entries);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -288,8 +299,10 @@ GLFWwindow* openGLEngineInit(int width, int height, const char* title)
 	int profile = glfwGetWindowAttrib(window, GLFW_OPENGL_PROFILE);
 	std::cout << "glfw window attrib requested/actual: " << attrMajor << "." << attrMinor << " profile=" << profile << std::endl;
 
-	// nota: mantengo il viewport originale impostato a 640x480 come nel codice precedente
-	glViewport(0, 0, 640, 480);
+
+	int winWidth, winHeight;
+	glfwGetWindowSize(window, &winWidth, &winHeight);
+	glViewport(0, 0, winWidth, winHeight);
 
 	glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 

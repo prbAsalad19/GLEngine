@@ -26,6 +26,10 @@ struct mat4
     static mat4 create_model_transform(Vector3 pos, float angle);
     static mat4 create_look_at(Vector3 from, Vector3 to);
     static mat4 create_prospective_projection(float fovy, float aspect, float near, float far);
+
+    // Matrix multiplication (column-major, compatible with OpenGL uniforms):
+    // result = this * other
+    mat4 operator*(const mat4& other) const;
 };
 
 // 3. Vertex usa memcmp, quindi lasciamolo dopo
