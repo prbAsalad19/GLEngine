@@ -173,8 +173,10 @@ bool MeshLoader::GetObjFileData(const std::string& filepath, CPUMesh& out_mesh) 
     return true;
 }
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int>& indices)
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int>& indices, Transform trnsfrm)
 {
+	transform = trnsfrm;
+
     std::vector<float> fVertices;
     for (const auto& v : vertices) {
         fVertices.push_back(v.position[0]);
@@ -219,6 +221,8 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int>& indices)
 
 void Mesh::draw()
 {
+	GLint currentProgram = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram); 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, vertex_count, GL_UNSIGNED_INT, 0);
 }

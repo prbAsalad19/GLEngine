@@ -5,6 +5,15 @@ OpenGL, GLFW e GLAD non sono documentati qui.
 
 ---
 
+## Sistema di coordinate (convenzione engine)
+
+- **Up del mondo:** **Z-up**. L’asse “su” è **Z** (es. `create_look_at` usa `up = (0, 0, 1)`).
+- **Assi:** **X** = destra, **Y** = avanti/indietro (a seconda della convenzione), **Z** = alto.
+- **Camera:** guarda lungo **-Z** (forward negativo).
+- **Asset Y-up** (es. molti OBJ): vanno convertiti in fase di import (es. rotazione −90° su X) e poi trattati come Z-up.
+
+---
+
 ## 1. Config (`include/config.h`)
 
 Non definisce classi o funzioni custom: raccoglie gli include comuni del progetto.
@@ -49,11 +58,12 @@ Tutte le funzioni statiche restituiscono una `mat4`; gli angoli sono in **gradi*
 | `create_z_rotation(float angle)` | Rotazione attorno all’**asse Z** (piano XY). Angolo in gradi, senso antiorario (mano destra). |
 | `create_x_rotation(float angle)` | Rotazione attorno all’**asse X** (piano YZ). Angolo in gradi. |
 | `create_y_rotation(float angle)` | Rotazione attorno all’**asse Y** (piano XZ). Angolo in gradi. |
+| `create_scale(Vector3 scale)` | Matrice di **scaling** (scale.entries[0/1/2] = sx, sy, sz sulla diagonale). |
 | `create_model_transform(Vector3 pos, float angle)` | Matrice combinata: **rotazione Z** + **traslazione** `pos`. Usata tipicamente come matrice modello (oggetto che ruota nel piano e viene spostato). |
 | `create_look_at(Vector3 from, Vector3 to)` | Matrice **view** “look-at”: camera in `from`, guarda verso `to`. **Up** del mondo fissato a `(0, 0, 1)` (asse Z verso l’alto). |
 | `create_prospective_projection(float fovy, float aspect, float near, float far)` | Matrice di **proiezione prospettica**. `fovy` = campo visivo verticale in gradi; `aspect` = width/height; `near` e `far` = piani di clipping (distanze positive, la camera guarda lungo -Z). |
 
-**Nota:** Non esiste (ancora) una moltiplicazione tra matrici `mat4 * mat4`; per combinare più trasformazioni (es. rotazione X poi Z poi traslazione) andrebbe implementata.
+**Operatore:** `mat4 operator*(const mat4& other)` — moltiplicazione column-major (risultato = this * other), per combinare trasformazioni.
 
 ---
 
@@ -72,6 +82,60 @@ Vertice con posizione, normale e UV per il pipeline OpenGL / OBJ.
 | `void Vzero()` | Azzera tutti i campi (memset a 0). |
 | `bool operator==(const Vertex& other)` | Confronto per uguaglianza (memcmp). |
 | `bool operator<(const Vertex& other)` | Ordinamento less-than (memcmp), usato per deduplicazione nei mesh. |
+
+---
+
+### Struct `EulerAngles`
+
+Angoli di Eulero in **gradi**: pitch (X), yaw (Y), roll (Z). Ordine di applicazione usato da `mat4_fromEuler` e `Quaternion::fromEuler`: **roll → yaw → pitch** (Rz * Ry * Rx).
+
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `pitch` | float | Rotazione attorno all’asse X (gradi). |
+| `yaw` | float | Rotazione attorno all’asse Y (gradi). |
+| `roll` | float | Rotazione attorno all’asse Z (gradi). |
+
+---
+
+### Classe `Quaternion`
+
+Quaternione di rotazione: componenti `x, y, z, w` (norma 1 per una rotazione valida).
+
+| Metodo | Descrizione |
+|--------|-------------|
+| `void normalize()` | Normalizza in-place (x,y,z,w). |
+| `mat4 toMat4() const` | Converte la rotazione in matrice 4×4 column-major. |
+| `static Quaternion identity()` | Restituisce (0, 0, 0, 1) (nessuna rotazione). |
+| `static Quaternion multiply(const Quaternion& a, const Quaternion& b)` | Composizione di rotazioni: a poi b. |
+| `static Quaternion fromAxisAngle(Vector3 axis, float angleDegrees)` | Rotazione di `angleDegrees` attorno a `axis` (axis normalizzato internamente se necessario). |
+| `static Quaternion fromEuler(const EulerAngles& e)` | Costruisce il quaternione dagli angoli di Eulero (stesso ordine di `mat4_fromEuler`). |
+
+---
+
+### Funzione `mat4_fromEuler`
+
+| Dichiarazione | Descrizione |
+|---------------|-------------|
+| `mat4 mat4_fromEuler(const EulerAngles& e)` | Restituisce la matrice di rotazione corrispondente agli angoli di Eulero. Ordine: R = Rz(roll) * Ry(yaw) * Rx(pitch). Angoli in gradi. |
+
+---
+
+### Classe `Transform`
+
+Trasformazione posizione + rotazione (quaternione) + scala. Modello = **T * R * S** (traslazione, rotazione, scala).
+
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `position` | Vector3 | Posizione nel mondo. |
+| `rotation` | Quaternion | Orientamento. |
+| `scale` | Vector3 | Scala (sx, sy, sz). |
+
+| Metodo | Descrizione |
+|--------|-------------|
+| `Transform()` | Inizializza: position = (0,0,0), rotation = identity, scale = (1,1,1). |
+| `mat4 getMatrix() const` | Restituisce la matrice modello **T * R * S**. |
+| `void setEuler(float pitchDeg, float yawDeg, float rollDeg)` | Imposta la rotazione dagli angoli di Eulero (gradi). |
+| `void setEuler(const EulerAngles& e)` | Imposta la rotazione da una struct EulerAngles. |
 
 ---
 
@@ -170,7 +234,7 @@ Definite e usate in `src/Main.cpp` (dichiarate in cima al file).
 |----------|-------------|
 | `unsigned int make_shader(const std::string& vertex_filepath, const std::string& fragment_filepath)` | Carica i sorgenti da due file, crea vertex e fragment shader, li linka in un program e restituisce l’handle. Restituisce **0** in caso di errore (compilazione o link). I moduli shader vengono eliminati dopo il link. |
 | `unsigned int make_module(const std::string& filepath, unsigned int module_type)` | Carica il sorgente da `filepath`, compila uno shader di tipo `module_type` (es. `GL_VERTEX_SHADER` o `GL_FRAGMENT_SHADER`) e restituisce l’handle. Restituisce **0** se il file non si apre o la compilazione fallisce. |
-| `GLFWwindow* openGLEngineInit(int width, int height, const char* title)` | Inizializza GLFW, crea una finestra OpenGL 3.3 Core con le dimensioni e il titolo dati, carica GLAD, stampa in console versione OpenGL/GLSL e attributi della finestra, imposta **viewport** a 640×480 e **clear color** a (0.07, 0.13, 0.17, 1). Restituisce il puntatore alla finestra o **nullptr** in caso di errore. |
+| `GLFWwindow* openGLEngineInit(int width, int height, const char* title)` | Inizializza GLFW, crea una finestra OpenGL 3.3 Core con le dimensioni e il titolo dati, carica GLAD, stampa in console versione OpenGL/GLSL e attributi della finestra, imposta **viewport** alle dimensioni della finestra (`glfwGetWindowSize`) e **clear color** a (0.07, 0.13, 0.17, 1). Restituisce il puntatore alla finestra o **nullptr** in caso di errore. |
 
 ---
 

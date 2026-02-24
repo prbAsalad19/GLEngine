@@ -55,6 +55,7 @@ int main()
 	glUniform1i(glGetUniformLocation(shader, "useMaskAlpha"), 0);  // 0 = opaco, 1 = alpha da mask
 
 	Vector3 quad_position = { -0.1f, 0.5f, -1.0f };
+	Vector3 model_scale = { 0.5f, 0.5f, 0.5f };
 	Vector3 camera_pos = { -5.0f, 0.0f, 3.0f };
 	Vector3 camera_target = { 0.0f, 0.0f, 0.0f };
 	unsigned int model_location = glGetUniformLocation(shader, "model");
@@ -90,7 +91,11 @@ int main()
 		glUniformMatrix4fv(proj_location, 1, GL_FALSE, projection.entries);
 
 		mat4 modelR_x = mat4::create_x_rotation(90.0f);
-		mat4 model = mat4::create_matrix_transform(quad_position) * mat4::create_z_rotation(glfwGetTime() * 10) * modelR_x;
+		mat4 modelScale = mat4::create_scale(model_scale);
+		mat4 model = mat4::create_matrix_transform(quad_position)
+			* mat4::create_z_rotation(glfwGetTime() * 10)
+			* modelR_x
+			* modelScale;
 		glUniformMatrix4fv(model_location, 1, GL_FALSE, model.entries);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -260,8 +265,8 @@ GLFWwindow* openGLEngineInit(int width, int height, const char* title)
 {
 	glfwInit();
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	GLFWwindow* window = glfwCreateWindow(width, height, title, NULL, NULL);

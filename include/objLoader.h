@@ -7,10 +7,11 @@ class Mesh
 private:
 	GLuint VBO, EBO, VAO, vertex_count;
 	std::vector<float> gpuVertices;
+	Transform transform;
 
 public:
-
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int>& indices);
+	std::unordered_map<GLuint, GLint> uniformModelLocCache;
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int>& indices, Transform trnsfrm = Transform::getIdentityTransform());
 	void draw();
 	~Mesh();
 };
