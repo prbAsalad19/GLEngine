@@ -24,6 +24,7 @@ int main()
         return -1;
     }
 
+    Scene scene; //creating the main scene
     // Load mesh
     CPUMesh cpuMesh;
     if (!MeshLoader::loadOBJ("assets/teapot_with_uv.obj", cpuMesh))
@@ -94,7 +95,7 @@ int main()
         glUniformMatrix4fv(uProj, 1, GL_FALSE, proj.entries);
 
         mat4 model = mat4::create_matrix_transform(position)
-                   * mat4::create_x_rotation(static_cast<float>(glfwGetTime()) * 10.0f)
+                   * mat4::create_z_rotation(static_cast<float>(glfwGetTime()) * 15.0f)
                    * baseRotation
                    * scaleMat;
         glUniformMatrix4fv(uModel, 1, GL_FALSE, model.entries);
