@@ -1,171 +1,92 @@
 #include "config.h"
 #include "objLoader.h"
 
-std::vector<Vertex> MeshLoader::formatForOpenGL(CPUMesh mesh_in, std::vector<unsigned int>& indices)
+// ─────────────────────────────────────────────
+//  MeshLoader
+// ─────────────────────────────────────────────
+
+bool MeshLoader::loadOBJ(const std::string& filepath, CPUMesh& out)
 {
-    std::vector<float> vert_in = mesh_in.getVertices();
-    std::vector<float> norm_in = mesh_in.getNormals();
-    std::vector<float> TCoord_in = mesh_in.getTextureCoord();
-    std::vector<int> face_in = mesh_in.getFaces();
-    int type = mesh_in.getMeshType();
-
-    std::vector<Vertex> vertVector;      // VBO
-    std::map<Vertex, unsigned int> vertexCache; // Mappa: [Dati Vertice] -> [Indice nel VBO]
-
-    int step = 1; // Default per type 0
-    if (type == 1 || type == 2) step = 2;
-    if (type == 3) step = 3;
-
-    const int vertCount = static_cast<int>(vert_in.size() / 3);
-    const int texCount = static_cast<int>(TCoord_in.size() / 2);
-    const int normCount = static_cast<int>(norm_in.size() / 3);
-
-    for (int i = 0; i + 0 < static_cast<int>(face_in.size()); i += step)
-    {
-        Vertex v;
-        v.Vzero(); // Pulisce i dati (importante per le normali/uv se non presenti)
-
-        // --- LOGICA DI PESCAGGIO UNIVERSALE ---
-        int vIdx = face_in[i];
-        if (vIdx < 0 || vIdx >= vertCount) continue; // difensivo
-
-        v.position[0] = vert_in[vIdx * 3 + 0];
-        v.position[1] = vert_in[vIdx * 3 + 1];
-        v.position[2] = vert_in[vIdx * 3 + 2];
-
-        if (type == 1) { // v/vt
-            int tIdx = face_in[i + 1];
-            if (tIdx >= 0 && tIdx < texCount) {
-                v.uv[0] = TCoord_in[tIdx * 2 + 0];
-                v.uv[1] = TCoord_in[tIdx * 2 + 1];
-            }
-        }
-        else if (type == 2) { // v//vn
-            int nIdx = face_in[i + 1];
-            if (nIdx >= 0 && nIdx < normCount) {
-                v.normal[0] = norm_in[nIdx * 3 + 0];
-                v.normal[1] = norm_in[nIdx * 3 + 1];
-                v.normal[2] = norm_in[nIdx * 3 + 2];
-            }
-        }
-        else if (type == 3) { // v/vt/vn
-            // CORRETTO: primo indice dopo v � t, poi n
-            int tIdx = face_in[i + 1];
-            int nIdx = face_in[i + 2];
-            if (nIdx >= 0 && nIdx < normCount) {
-                v.normal[0] = norm_in[nIdx * 3 + 0];
-                v.normal[1] = norm_in[nIdx * 3 + 1];
-                v.normal[2] = norm_in[nIdx * 3 + 2];
-            }
-            if (tIdx >= 0 && tIdx < texCount) {
-                v.uv[0] = TCoord_in[tIdx * 2 + 0];
-                v.uv[1] = TCoord_in[tIdx * 2 + 1];
-            }
-        }
-
-        // --- DEDUPLICAZIONE ---
-        auto it = vertexCache.find(v);
-        if (it == vertexCache.end()) {
-            // Il vertice � nuovo
-            unsigned int newIndex = static_cast<unsigned int>(vertVector.size());
-            vertVector.push_back(v);
-            vertexCache[v] = newIndex;
-            indices.push_back(newIndex);
-        }
-        else {
-            // Il vertice esiste gi�, usa l'indice salvato
-            indices.push_back(it->second);
-        }
-    }
-    return vertVector;
-}
-
-bool MeshLoader::GetObjFileData(const std::string& filepath, CPUMesh& out_mesh) {
     std::ifstream file(filepath);
     if (!file.is_open()) return false;
 
     std::string line;
-    while (std::getline(file, line)) {
+    while (std::getline(file, line))
+    {
         if (line.empty()) continue;
+
         std::stringstream ss(line);
         std::string prefix;
-        ss >> prefix; // Legge la prima parola (v, vt, vn, f, o commenti #)
+        ss >> prefix;
 
-        if (prefix == "v") {
+        if (prefix == "v")
+        {
             float x, y, z;
             ss >> x >> y >> z;
-            out_mesh.addVertex(x, y, z);
+            out.addVertex(x, y, z);
         }
-        else if (prefix == "vt") {
+        else if (prefix == "vt")
+        {
             float u, v;
             ss >> u >> v;
-            out_mesh.addTextureCoord(u, v);
+            out.addTextureCoord(u, v);
         }
-        else if (prefix == "vn") {
+        else if (prefix == "vn")
+        {
             float x, y, z;
             ss >> x >> y >> z;
-            out_mesh.addNormal(x, y, z);
+            out.addNormal(x, y, z);
         }
-        else if (prefix == "f") {
-            // raccogliamo tutti i token della faccia (es: "1/2/3", "4//5", ...)
-            std::vector<int> vIdxs;
-            std::vector<int> tIdxs;
-            std::vector<int> nIdxs;
+        else if (prefix == "f")
+        {
+            std::vector<int> vIdx, tIdx, nIdx;
 
-            std::string segment;
-            while (ss >> segment) {
-                // split per '/'
+            std::string token;
+            while (ss >> token)
+            {
                 std::vector<std::string> parts;
-                std::stringstream segSS(segment);
+                std::stringstream ts(token);
                 std::string part;
-                while (std::getline(segSS, part, '/')) parts.push_back(part);
+                while (std::getline(ts, part, '/')) parts.push_back(part);
 
                 int v = -1, t = -1, n = -1;
+                int vertCount = static_cast<int>(out.getVertices().size()     / 3);
+                int texCount  = static_cast<int>(out.getTextureCoord().size() / 2);
+                int normCount = static_cast<int>(out.getNormals().size()      / 3);
 
-                // numero di elementi gi� presenti (per supportare indici negativi)
-                int vertCount = static_cast<int>(out_mesh.getVertices().size() / 3);
-                int texCount = static_cast<int>(out_mesh.getTextureCoord().size() / 2);
-                int normCount = static_cast<int>(out_mesh.getNormals().size() / 3);
-
-                if (parts.size() >= 1 && !parts[0].empty()) {
+                if (parts.size() >= 1 && !parts[0].empty())
+                {
                     v = std::stoi(parts[0]);
-                    if (v < 0) v = vertCount + v;
-                    else v = v - 1; // 1-based -> 0-based
+                    v = (v < 0) ? vertCount + v : v - 1;
                 }
-                if (parts.size() >= 2 && !parts[1].empty()) {
+                if (parts.size() >= 2 && !parts[1].empty())
+                {
                     t = std::stoi(parts[1]);
-                    if (t < 0) t = texCount + t;
-                    else t = t - 1;
+                    t = (t < 0) ? texCount + t : t - 1;
                 }
-                if (parts.size() >= 3 && !parts[2].empty()) {
+                if (parts.size() >= 3 && !parts[2].empty())
+                {
                     n = std::stoi(parts[2]);
-                    if (n < 0) n = normCount + n;
-                    else n = n - 1;
+                    n = (n < 0) ? normCount + n : n - 1;
                 }
 
-                vIdxs.push_back(v);
-                tIdxs.push_back(t);
-                nIdxs.push_back(n);
+                vIdx.push_back(v);
+                tIdx.push_back(t);
+                nIdx.push_back(n);
             }
 
-            // Triangolazione a fan per poligoni con >3 vertici
-            if (vIdxs.size() >= 3) {
-                for (size_t i = 1; i + 1 < vIdxs.size(); ++i) {
-                    int vi[3] = { vIdxs[0], vIdxs[i], vIdxs[i + 1] };
-                    int ti[3] = { (tIdxs.size() ? tIdxs[0] : -1), (tIdxs.size() ? tIdxs[i] : -1), (tIdxs.size() ? tIdxs[i + 1] : -1) };
-                    int ni[3] = { (nIdxs.size() ? nIdxs[0] : -1), (nIdxs.size() ? nIdxs[i] : -1), (nIdxs.size() ? nIdxs[i + 1] : -1) };
+            // Fan triangulation for polygons with more than 3 vertices
+            for (size_t i = 1; i + 1 < vIdx.size(); ++i)
+            {
+                int vi[3] = { vIdx[0], vIdx[i], vIdx[i+1] };
+                int ti[3] = { tIdx[0], tIdx[i], tIdx[i+1] };
+                int ni[3] = { nIdx[0], nIdx[i], nIdx[i+1] };
 
-                    for (int k = 0; k < 3; ++k) {
-                        // aggiungiamo sempre l'indice del vertice (gi� int)
-                        out_mesh.addOneFaceValue(vi[k]);
-                        // aggiungiamo gli indici opzionali solo se esistono effettivamente vettori globali
-                        if (!out_mesh.getTextureCoord().empty()) {
-                            out_mesh.addOneFaceValue(ti[k]);
-                        }
-                        if (!out_mesh.getNormals().empty()) {
-                            out_mesh.addOneFaceValue(ni[k]);
-                        }
-                    }
+                for (int k = 0; k < 3; ++k)
+                {
+                    out.addFaceValue(vi[k]);
+                    if (!out.getTextureCoord().empty()) out.addFaceValue(ti[k]);
+                    if (!out.getNormals().empty())      out.addFaceValue(ni[k]);
                 }
             }
         }
@@ -173,42 +94,122 @@ bool MeshLoader::GetObjFileData(const std::string& filepath, CPUMesh& out_mesh) 
     return true;
 }
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int>& indices, Transform trnsfrm)
+std::vector<Vertex> MeshLoader::toVertexArray(const CPUMesh& mesh,
+                                               std::vector<unsigned int>& outIndices)
 {
-	transform = trnsfrm;
+    const auto& pos  = mesh.getVertices();
+    const auto& norm = mesh.getNormals();
+    const auto& uv   = mesh.getTextureCoord();
+    const auto& face = mesh.getFaces();
+    const int   type = mesh.getMeshType();
 
-    std::vector<float> fVertices;
-    for (const auto& v : vertices) {
-        fVertices.push_back(v.position[0]);
-        fVertices.push_back(v.position[1]);
-        fVertices.push_back(v.position[2]);
-        fVertices.push_back(v.normal[0]);
-        fVertices.push_back(v.normal[1]);
-        fVertices.push_back(v.normal[2]);
-        fVertices.push_back(v.uv[0]);
-        fVertices.push_back(v.uv[1]);
+    const int posCount  = static_cast<int>(pos.size()  / 3);
+    const int uvCount   = static_cast<int>(uv.size()   / 2);
+    const int normCount = static_cast<int>(norm.size() / 3);
+
+    int step = 1;
+    if (type == 1 || type == 2) step = 2;
+    if (type == 3)               step = 3;
+
+    std::vector<Vertex> vertices;
+    std::map<Vertex, unsigned int> cache;
+
+    for (int i = 0; i < static_cast<int>(face.size()); i += step)
+    {
+        Vertex v;
+        v.zero();
+
+        int vIdx = face[i];
+        if (vIdx < 0 || vIdx >= posCount) continue;
+
+        v.position[0] = pos[vIdx * 3 + 0];
+        v.position[1] = pos[vIdx * 3 + 1];
+        v.position[2] = pos[vIdx * 3 + 2];
+
+        if (type == 1)  // v/vt
+        {
+            int tIdx = face[i + 1];
+            if (tIdx >= 0 && tIdx < uvCount)
+            {
+                v.uv[0] = uv[tIdx * 2 + 0];
+                v.uv[1] = uv[tIdx * 2 + 1];
+            }
+        }
+        else if (type == 2)  // v//vn
+        {
+            int nIdx = face[i + 1];
+            if (nIdx >= 0 && nIdx < normCount)
+            {
+                v.normal[0] = norm[nIdx * 3 + 0];
+                v.normal[1] = norm[nIdx * 3 + 1];
+                v.normal[2] = norm[nIdx * 3 + 2];
+            }
+        }
+        else if (type == 3)  // v/vt/vn
+        {
+            int tIdx = face[i + 1];
+            int nIdx = face[i + 2];
+            if (tIdx >= 0 && tIdx < uvCount)
+            {
+                v.uv[0] = uv[tIdx * 2 + 0];
+                v.uv[1] = uv[tIdx * 2 + 1];
+            }
+            if (nIdx >= 0 && nIdx < normCount)
+            {
+                v.normal[0] = norm[nIdx * 3 + 0];
+                v.normal[1] = norm[nIdx * 3 + 1];
+                v.normal[2] = norm[nIdx * 3 + 2];
+            }
+        }
+
+        auto it = cache.find(v);
+        if (it == cache.end())
+        {
+            unsigned int idx = static_cast<unsigned int>(vertices.size());
+            vertices.push_back(v);
+            cache[v] = idx;
+            outIndices.push_back(idx);
+        }
+        else
+        {
+            outIndices.push_back(it->second);
+        }
     }
+    return vertices;
+}
 
-    vertex_count = static_cast<unsigned int>(indices.size());
+// ─────────────────────────────────────────────
+//  Mesh
+// ─────────────────────────────────────────────
+
+Mesh::Mesh(const std::vector<Vertex>& vertices,
+           const std::vector<unsigned int>& indices,
+           Transform t)
+    : transform(t), indexCount(static_cast<unsigned int>(indices.size()))
+{
+    // Interleave vertex data: position (3) | normal (3) | uv (2)
+    std::vector<float> data;
+    data.reserve(vertices.size() * 8);
+    for (const auto& v : vertices)
+    {
+        data.push_back(v.position[0]); data.push_back(v.position[1]); data.push_back(v.position[2]);
+        data.push_back(v.normal[0]);   data.push_back(v.normal[1]);   data.push_back(v.normal[2]);
+        data.push_back(v.uv[0]);       data.push_back(v.uv[1]);
+    }
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, fVertices.size() * sizeof(float), fVertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), data.data(), GL_STATIC_DRAW);
 
-    // layout: 3 position, 3 normal, 2 uv -> stride = 8 * sizeof(float)
-    // posizione
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    constexpr int stride = 8 * sizeof(float);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
-
-    // normale
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    // uv
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     glGenBuffers(1, &EBO);
@@ -219,17 +220,15 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int>& indices, Tra
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Mesh::draw()
+void Mesh::draw() const
 {
-	GLint currentProgram = 0;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram); 
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, vertex_count, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 }
 
 Mesh::~Mesh()
 {
+    glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteVertexArrays(1, &VAO);
 }
