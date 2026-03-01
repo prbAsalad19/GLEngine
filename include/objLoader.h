@@ -77,11 +77,6 @@ public:
 
 struct Scene
 {
-    std::vector<CPUMesh> CPUMeshes;
-    std::vector<Mesh> meshes;
-    std::vector<Transform> Transforms;
-
-
     struct RenderObject
     {
         unsigned int mesh;
