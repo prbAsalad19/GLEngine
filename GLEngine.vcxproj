@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="resourceManager.cpp" />
     <ClCompile Include="src\algebricOp.cpp" />
     <ClCompile Include="src\config.cpp" />
     <ClCompile Include="src\glad.c" />
@@ -34,6 +35,7 @@
     <ClInclude Include="include\objLoader.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\triangle_mesh.h" />
+    <ClInclude Include="resourceManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\fragment.txt" />

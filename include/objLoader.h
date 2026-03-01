@@ -34,7 +34,7 @@ public:
     const std::vector<float>& getVertices()     const { return vertices; }
     const std::vector<float>& getTextureCoord() const { return textureCoord; }
     const std::vector<float>& getNormals()      const { return normals; }
-    const std::vector<int>&   getFaces()        const { return faces; }
+    const std::vector<unsigned int>&   getFaces()        const { return faces; }
 
     // 0 = v only | 1 = v/vt | 2 = v//vn | 3 = v/vt/vn
     int getMeshType() const
@@ -56,7 +56,7 @@ private:
     std::vector<float> vertices;
     std::vector<float> textureCoord;
     std::vector<float> normals;
-    std::vector<int>   faces;
+    std::vector<unsigned int>   faces;
 };
 
 // ─────────────────────────────────────────────
@@ -73,4 +73,21 @@ public:
     // Converts a CPUMesh to a deduplicated vertex array + index array.
     static std::vector<Vertex> toVertexArray(const CPUMesh& mesh,
                                              std::vector<unsigned int>& outIndices);
+};
+
+struct Scene
+{
+    std::vector<CPUMesh> CPUMeshes;
+    std::vector<Mesh> meshes;
+    std::vector<Transform> Transforms;
+
+
+    struct RenderObject
+    {
+        unsigned int mesh;
+        unsigned int tranform;
+        unsigned int texture; //-1 for no texture
+    };
+
+    std::vector<RenderObject> objects;
 };
