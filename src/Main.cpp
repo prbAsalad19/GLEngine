@@ -26,7 +26,7 @@ int main()
 
     // Load mesh
     CPUMesh cpuMesh;
-    if (!MeshLoader::loadOBJ("assets/teapot.obj", cpuMesh))
+    if (!MeshLoader::loadOBJ("assets/teapot_with_uv.obj", cpuMesh))
     {
         std::cout << "Failed to load OBJ." << std::endl;
         glfwDestroyWindow(window);
