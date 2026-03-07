@@ -1,6 +1,6 @@
 #pragma once
-#include "core/CoreConfig.h"
 #include "opengl/OpenGLConfig.h"
+#include "core/assets/ImageData.h"
 
 class Material
 {

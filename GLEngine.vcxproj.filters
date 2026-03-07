@@ -19,78 +19,102 @@
     <Filter Include="assets">
       <UniqueIdentifier>{372a5727-1b08-4108-815c-9a1e1189b8fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="File di origine\core">
+      <UniqueIdentifier>{47b112cb-f72b-4d27-a51e-a58e0a0e7f39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di origine\core\math">
+      <UniqueIdentifier>{cce63b0c-6e3a-4dd2-9d10-9f24f46dc4e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di origine\core\assets">
+      <UniqueIdentifier>{50b0f6e4-12e1-40be-987a-f9f663576091}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di origine\core\scene">
+      <UniqueIdentifier>{438d4e2a-e549-4c70-958a-b47b0f2bced2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di origine\opengl">
+      <UniqueIdentifier>{279c4322-2a72-431e-8bbf-93b8b6ccfa98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di intestazione\core">
+      <UniqueIdentifier>{a12a6edb-d8be-4aed-b9c2-acb64819c98e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di intestazione\core\math">
+      <UniqueIdentifier>{f0d8cb6d-84bb-49ff-be08-971d640de231}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di intestazione\core\assets">
+      <UniqueIdentifier>{fe30cafc-cb19-4143-996c-d9f20eba3990}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di intestazione\core\scene">
+      <UniqueIdentifier>{87e660b6-aca3-4483-8d66-2e8edbc83caf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di intestazione\opengl">
+      <UniqueIdentifier>{d5b33d0a-0e2a-4cf5-b50e-a3a2f7833729}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\config.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
     <ClCompile Include="src\Main.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="src\objLoader.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\glad.c">
-      <Filter>File di origine</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\math\algebricOp.cpp">
-      <Filter>File di origine</Filter>
+      <Filter>File di origine\core\math</Filter>
     </ClCompile>
     <ClCompile Include="src\core\assets\CPUMesh.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\assets\ImageData.cpp">
-      <Filter>File di origine</Filter>
+      <Filter>File di origine\core\assets</Filter>
     </ClCompile>
     <ClCompile Include="src\core\assets\MeshLoader.cpp">
-      <Filter>File di origine</Filter>
+      <Filter>File di origine\core\assets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\assets\ImageData.cpp">
+      <Filter>File di origine\core\assets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\scene\Transform.cpp">
+      <Filter>File di origine\core\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\glad.c">
+      <Filter>File di origine\opengl</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\OpenGLMesh.cpp">
-      <Filter>File di origine</Filter>
+      <Filter>File di origine\opengl</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\OpenGLTexture.cpp">
-      <Filter>File di origine</Filter>
+      <Filter>File di origine\opengl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\objLoader.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\assets\CPUMesh.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\assets\ImageData.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\assets\MeshLoader.h">
-      <Filter>File di intestazione</Filter>
+    <ClInclude Include="src\core\CoreConfig.h">
+      <Filter>File di intestazione\core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\math\algebricOp.h">
-      <Filter>File di intestazione</Filter>
+      <Filter>File di intestazione\core\math</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\scene\RenderObject.h">
-      <Filter>File di intestazione</Filter>
+    <ClInclude Include="src\core\assets\CPUMesh.h">
+      <Filter>File di intestazione\core\assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\assets\ImageData.h">
+      <Filter>File di intestazione\core\assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\assets\MeshLoader.h">
+      <Filter>File di intestazione\core\assets</Filter>
     </ClInclude>
     <ClInclude Include="src\core\scene\Scene.h">
-      <Filter>File di intestazione</Filter>
+      <Filter>File di intestazione\core\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\core\scene\Transform.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\CoreConfig.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="src\opengl\OpenGLMesh.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="src\opengl\OpenGLTexture.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="src\opengl\OpenGLConfig.h">
-      <Filter>File di intestazione</Filter>
+      <Filter>File di intestazione\core\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\core\assets\stb_image.h">
-      <Filter>File di intestazione</Filter>
+      <Filter>File di intestazione\core\assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\scene\RenderObject.h">
+      <Filter>File di intestazione\core\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLConfig.h">
+      <Filter>File di intestazione\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLMesh.h">
+      <Filter>File di intestazione\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLTexture.h">
+      <Filter>File di intestazione\opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,6 @@
-#include "config.h"
-#include "material.h"
-#include "algebricOp.h"
+#include "core/CoreConfig.h"
+#include ".h"
+#include "core/math/algebricOp.h"
 #include "objLoader.h"
 
 #include <glad/glad.h>

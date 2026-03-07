@@ -19,19 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\config.cpp" />
     <ClCompile Include="src\core\assets\CPUMesh.cpp" />
     <ClCompile Include="src\core\assets\ImageData.cpp" />
     <ClCompile Include="src\core\assets\MeshLoader.cpp" />
     <ClCompile Include="src\core\math\algebricOp.cpp" />
+    <ClCompile Include="src\core\scene\Transform.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\objLoader.cpp" />
     <ClCompile Include="src\opengl\OpenGLMesh.cpp" />
     <ClCompile Include="src\opengl\OpenGLTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\objLoader.h" />
     <ClInclude Include="src\core\assets\CPUMesh.h" />
     <ClInclude Include="src\core\assets\ImageData.h" />
     <ClInclude Include="src\core\assets\MeshLoader.h" />

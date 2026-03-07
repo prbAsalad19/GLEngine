@@ -1,4 +1,3 @@
-#include "core/CoreConfig.h"
 #include "core/math/algebricOp.h"
 #include "core/scene/Transform.h"
 #include "opengl/OpenGLConfig.h"
