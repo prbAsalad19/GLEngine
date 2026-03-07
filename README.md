@@ -175,6 +175,8 @@ prbAsalad19
 
 ---
 
+This project is experimental and provided as-is.
+
 ## License
 
 MIT License
