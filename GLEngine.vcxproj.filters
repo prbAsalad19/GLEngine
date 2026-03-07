@@ -49,6 +49,12 @@
     <Filter Include="File di intestazione\opengl">
       <UniqueIdentifier>{d5b33d0a-0e2a-4cf5-b50e-a3a2f7833729}</UniqueIdentifier>
     </Filter>
+    <Filter Include="File di origine\core\resource_manager">
+      <UniqueIdentifier>{9b27fc63-3f0f-43e5-97d1-10896b30c822}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di intestazione\core\resource_manager">
+      <UniqueIdentifier>{650aca9a-1bf2-475e-aa45-c42685cd403a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -69,14 +75,17 @@
     <ClCompile Include="src\core\scene\Transform.cpp">
       <Filter>File di origine\core\scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\glad.c">
-      <Filter>File di origine\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="src\opengl\OpenGLMesh.cpp">
       <Filter>File di origine\opengl</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\OpenGLTexture.cpp">
       <Filter>File di origine\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\glad.c">
+      <Filter>File di origine\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\resourcemanager\ResourceManager.cpp">
+      <Filter>File di origine\core\resource_manager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +124,15 @@
     </ClInclude>
     <ClInclude Include="src\opengl\OpenGLTexture.h">
       <Filter>File di intestazione\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\resourcemanager\ResourceHandle.h">
+      <Filter>File di intestazione\core\resource_manager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\resourcemanager\ResourceManager.h">
+      <Filter>File di intestazione\core\resource_manager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\resourcemanager\ResourcePool.h">
+      <Filter>File di intestazione\core\resource_manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

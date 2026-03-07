@@ -2,11 +2,11 @@
 #include "opengl/OpenGLConfig.h"
 #include "core/assets/ImageData.h"
 
-class Material
+class OpenGLTexture
 {
 public:
-	Material(const char* filename);
-	~Material();
+	OpenGLTexture(const char* filename);
+	~OpenGLTexture();
 	void use(int unit);
 
 private:

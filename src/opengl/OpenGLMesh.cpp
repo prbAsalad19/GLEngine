@@ -1,6 +1,6 @@
 #include "OpenGLMesh.h"
 
-Mesh::Mesh(const std::vector<Vertex>& vertices,
+OpenGLMesh::OpenGLMesh(const std::vector<Vertex>& vertices,
     const std::vector<unsigned int>& indices,
     Transform t)
     : transform(t), indexCount(static_cast<unsigned int>(indices.size()))
@@ -52,13 +52,13 @@ Mesh::Mesh(const std::vector<Vertex>& vertices,
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Mesh::draw() const
+void OpenGLMesh::draw() const
 {
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 }
 
-Mesh::~Mesh()
+OpenGLMesh::~OpenGLMesh()
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

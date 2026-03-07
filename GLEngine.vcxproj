@@ -23,9 +23,10 @@
     <ClCompile Include="src\core\assets\ImageData.cpp" />
     <ClCompile Include="src\core\assets\MeshLoader.cpp" />
     <ClCompile Include="src\core\math\algebricOp.cpp" />
+    <ClCompile Include="src\core\resourcemanager\ResourceManager.cpp" />
     <ClCompile Include="src\core\scene\Transform.cpp" />
-    <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\opengl\glad.c" />
     <ClCompile Include="src\opengl\OpenGLMesh.cpp" />
     <ClCompile Include="src\opengl\OpenGLTexture.cpp" />
   </ItemGroup>
@@ -36,6 +37,9 @@
     <ClInclude Include="src\core\assets\stb_image.h" />
     <ClInclude Include="src\core\CoreConfig.h" />
     <ClInclude Include="src\core\math\algebricOp.h" />
+    <ClInclude Include="src\core\resourcemanager\ResourceHandle.h" />
+    <ClInclude Include="src\core\resourcemanager\ResourceManager.h" />
+    <ClInclude Include="src\core\resourcemanager\ResourcePool.h" />
     <ClInclude Include="src\core\scene\RenderObject.h" />
     <ClInclude Include="src\core\scene\Scene.h" />
     <ClInclude Include="src\core\scene\Transform.h" />

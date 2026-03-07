@@ -1,11 +1,19 @@
 #include "ImageData.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
-unsigned char* loadImage(const char* filename, int& width, int& height, int& channels)
+ImageData ImageData::load(const std::string& filepath)
 {
-	return stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
+    ImageData img;
+    img.pixels = stbi_load(filepath.c_str(),
+        &img.width, &img.height, &img.channels,
+        STBI_rgb_alpha);
+    img.valid = (img.pixels != nullptr);
+    return img;
 }
 
-void freeImage(unsigned char* data)
+void ImageData::free()
 {
-	stbi_image_free(data);
+    if (pixels) { stbi_image_free(pixels); pixels = nullptr; }
+    valid = false;
 }

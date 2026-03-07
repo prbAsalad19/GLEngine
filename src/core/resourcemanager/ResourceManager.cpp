@@ -3,36 +3,17 @@
 #endif
 
 #include <experimental/filesystem>
-#include "config.h"
 #include "resourceManager.h"
 
-const meshHandle ResourceManager::loadMesh(const std::string& filepath, Transform transform)
+const MeshHandle ResourceManager::loadMesh(const std::string& path)
 {
-	meshHandle handle(0, 0);
-	std::string canonicalPath = std::experimental::filesystem::canonical(filepath).string();
-	if (meshCache.find(canonicalPath) != meshCache.end())
-	{
-		handle.slot = meshCache[canonicalPath];
-		handle.generation = meshes[handle.slot].generation;
-		return handle;
-	}
-	
-	uint32_t slot = getFirstFreeSlot();
-	CPUMesh cpuMesh;
-	std::vector<unsigned int> vertices;
-	if (!MeshLoader::loadOBJ(canonicalPath, cpuMesh))
-	{
-		std::cout << "Failed to create mesh resource" << canonicalPath << std::endl;
-		return meshHandle(static_cast<uint32_t>(-1), 0);
-	}
-	std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>(MeshLoader::toVertexArray(cpuMesh, vertices), cpuMesh.getFaces(), transform);
-	meshes[slot].resource = std::move(mesh);
-	meshes[slot].active = true;
-	meshCache[canonicalPath] = slot;
-	handle.slot = slot;
-	handle.generation = meshes[slot].generation;
+	CPUMesh cpu;
+	if (!MeshLoader::loadOBJ(path, cpu)) return MeshHandle{};
 
-	return handle;
+	std::vector<unsigned int> indices;
+	auto mesh = std::make_unique<OpenGLMesh>(MeshLoader::toVertexArray(cpu, indices), cpu.getFaces());
+
+	return meshPool.insert(path, std::move(mesh));
 }
 
 const void ResourceManager::getFreeSlots()

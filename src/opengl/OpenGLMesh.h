@@ -2,13 +2,13 @@
 #include "core/scene/Transform.h"
 #include "opengl/OpenGLConfig.h"
 
-class Mesh
+class OpenGLMesh
 {
 public:
-    Mesh(const std::vector<Vertex>& vertices,
+    OpenGLMesh(const std::vector<Vertex>& vertices,
         const std::vector<unsigned int>& indices,
         Transform transform = Transform::getIdentityTransform());
-    ~Mesh();
+    ~OpenGLMesh();
 
     void draw() const;
 
