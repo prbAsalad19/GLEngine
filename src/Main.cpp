@@ -3,6 +3,8 @@
 #include "algebricOp.h"
 #include "objLoader.h"
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 // ─────────────────────────────────────────────
 //  Forward declarations
 // ─────────────────────────────────────────────

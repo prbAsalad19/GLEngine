@@ -88,21 +88,4 @@ public:
     static Quaternion fromEuler(const EulerAngles& e);
 };
 
-// ─────────────────────────────────────────────
-//  Transform  (T * R * S)
-// ─────────────────────────────────────────────
 
-class Transform
-{
-public:
-    Vector3    position;
-    Quaternion rotation;
-    Vector3    scale;
-
-    Transform();
-    static Transform getIdentityTransform();
-
-    mat4 getMatrix() const;
-    void setQuaternion(float x, float y, float z, float w);
-    void setEuler(const EulerAngles& e);
-};

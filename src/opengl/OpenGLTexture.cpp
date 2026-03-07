@@ -1,5 +1,5 @@
-#include "material.h"
-#include "stb_image.h"
+#include "OpenGLTexture.h"
+#include "core/assets/stb_image.h"
 
 Material::Material(const char* filename)
 {

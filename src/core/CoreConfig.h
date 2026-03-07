@@ -1,8 +1,5 @@
 #pragma once
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
+// Standard library only — zero graphics API
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -12,3 +9,5 @@
 #include <unordered_map>
 #include <filesystem>
 #include <algorithm>
+#include <memory>
+#include <cstdint>

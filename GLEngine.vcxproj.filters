@@ -21,51 +21,75 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\algebricOp.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
     <ClCompile Include="src\config.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
     <ClCompile Include="src\Main.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="src\material.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
     <ClCompile Include="src\objLoader.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\triangle_mesh.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
     <ClCompile Include="src\glad.c">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="resourceManager.cpp">
+    <ClCompile Include="src\core\math\algebricOp.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\assets\CPUMesh.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\assets\ImageData.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\assets\MeshLoader.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\OpenGLMesh.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\OpenGLTexture.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\algebricOp.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="include\config.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="include\material.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
     <ClInclude Include="include\objLoader.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="include\stb_image.h">
+    <ClInclude Include="src\core\assets\CPUMesh.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="include\triangle_mesh.h">
+    <ClInclude Include="src\core\assets\ImageData.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="resourceManager.h">
+    <ClInclude Include="src\core\assets\MeshLoader.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\math\algebricOp.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\scene\RenderObject.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\scene\Scene.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\scene\Transform.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\CoreConfig.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLMesh.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLTexture.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLConfig.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\assets\stb_image.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
   </ItemGroup>
