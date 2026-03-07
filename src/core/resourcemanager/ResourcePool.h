@@ -5,6 +5,14 @@
 template<typename Tag, typename T>
 class ResourcePool
 {
+	explicit ResourcePool(uint32_t capacity = 64)
+	{
+		slots.resize(capacity);
+		freeList.resize(capacity);
+		for (uint32_t i = 0; i < capacity; ++i)
+			freeList[i] = i;
+	} //making the free list a non null vector
+
 	struct Slot
 	{
 		std::unique_ptr<T> resource;
@@ -22,7 +30,7 @@ public:
 
 	ResourceHandle<Tag> insert(const std::string& path, std::unique_ptr<T> resource)
 	{
-		auto it = chache.find(path);
+		auto it = cache.find(path);
 		if (it != cache.end())
 		{
 			uint32_t s = it->second;
@@ -51,6 +59,14 @@ public:
 		slots[handle.slot].active = false;
 		slots[handle.slot].resource.reset();
 		slots[handle.slot].generation++;
+
+		auto it = std::lower_bound(freeList.begin(), freeList.end(), handle.slot);
+		freeList.insert(it, handle.slot);
+
+		//pulizia cache
+		auto cacheIt = std::find_if(cache.begin(), cache.end(),
+			[&handle](const auto& pair) { return pair.second == handle.slot; });
+		if (cacheIt != cache.end()) cache.erase(cacheIt);
 
 		return true;
 	}

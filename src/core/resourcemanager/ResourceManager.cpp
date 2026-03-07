@@ -16,43 +16,12 @@ const MeshHandle ResourceManager::loadMesh(const std::string& path)
 	return meshPool.insert(path, std::move(mesh));
 }
 
-const void ResourceManager::getFreeSlots()
+OpenGLMesh* ResourceManager::getMesh(MeshHandle handle)
 {
-	for (size_t i = 0; i < meshes.size(); i++)
-	{
-		if (!meshes[i].active)
-		{
-			freeSlotList.push_back(i);
-		}
-	}
+	return meshPool.get(handle);
 }
 
-const uint32_t ResourceManager::getFirstFreeSlot()
+void ResourceManager::deleteMesh(MeshHandle handle)
 {
-	uint32_t slot = freeSlotList[0];
-	for (size_t i = 1; i < meshes.size(); i++)
-	{
-		freeSlotList[i - 1] = freeSlotList[i];
-	}
-	freeSlotList.pop_back();
-	return slot;
-}
-
-const int ResourceManager::deleteMesh(meshHandle handle)
-{
-	if (handle.slot >= meshes.size() || handle.generation != meshes[handle.slot].generation)
-	{
-		return -1;
-	}
-	meshes[handle.slot].active = false;
-	meshes[handle.slot].resource.reset();
-	meshes[handle.slot].generation++;
-	auto mapIt = std::find_if(meshCache.begin(), meshCache.end(), [handle](const std::pair<const std::string, uint32_t>& pair) { return pair.second == handle.slot; });
-	if (mapIt != meshCache.end())
-	{
-		meshCache.erase(mapIt);
-	}
-	auto it = std::lower_bound(freeSlotList.begin(), freeSlotList.end(), handle.slot);
-	freeSlotList.insert(it, handle.slot);
-	return 0;
+	meshPool.remove(handle);
 }
