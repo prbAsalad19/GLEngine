@@ -3,7 +3,7 @@
 
 struct RenderObject
 {
-    ResourceHandle<MeshTag> mesh;
-    ResourceHandle<MaterialTag> material; //-1 for no texture
+    MeshHandle mesh;
+    MaterialHandle material; //-1 for no texture
     Transform transform;
 };

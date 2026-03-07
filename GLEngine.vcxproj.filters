@@ -134,6 +134,9 @@
     <ClInclude Include="src\core\resourcemanager\ResourcePool.h">
       <Filter>File di intestazione\core\resource_manager</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\assets\Material.h">
+      <Filter>File di intestazione\core\assets</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\fragment.txt">

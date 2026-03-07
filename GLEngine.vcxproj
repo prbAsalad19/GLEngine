@@ -33,6 +33,7 @@
   <ItemGroup>
     <ClInclude Include="src\core\assets\CPUMesh.h" />
     <ClInclude Include="src\core\assets\ImageData.h" />
+    <ClInclude Include="src\core\assets\Material.h" />
     <ClInclude Include="src\core\assets\MeshLoader.h" />
     <ClInclude Include="src\core\assets\stb_image.h" />
     <ClInclude Include="src\core\CoreConfig.h" />
