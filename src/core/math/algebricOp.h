@@ -13,6 +13,9 @@ class Vector3
 public:
     float entries[3];
 
+	Vector3 operator+(const Vector3& other) const;
+    Vector3 operator-(const Vector3& other) const;
+
     static float   dot(Vector3 u, Vector3 v);
     static Vector3 normalize(Vector3 v);
     static Vector3 cross(Vector3 u, Vector3 v);

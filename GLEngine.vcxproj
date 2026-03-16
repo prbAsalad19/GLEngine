@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -24,10 +24,12 @@
     <ClCompile Include="src\core\assets\MeshLoader.cpp" />
     <ClCompile Include="src\core\math\algebricOp.cpp" />
     <ClCompile Include="src\core\resourcemanager\ResourceManager.cpp" />
+    <ClCompile Include="src\core\scene\Camera.cpp" />
     <ClCompile Include="src\core\scene\Transform.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\opengl\glad.c" />
     <ClCompile Include="src\opengl\OpenGLMesh.cpp" />
+    <ClCompile Include="src\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="src\opengl\OpenGLTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -41,11 +43,13 @@
     <ClInclude Include="src\core\resourcemanager\ResourceHandle.h" />
     <ClInclude Include="src\core\resourcemanager\ResourceManager.h" />
     <ClInclude Include="src\core\resourcemanager\ResourcePool.h" />
+    <ClInclude Include="src\core\scene\Camera.h" />
     <ClInclude Include="src\core\scene\RenderObject.h" />
     <ClInclude Include="src\core\scene\Scene.h" />
     <ClInclude Include="src\core\scene\Transform.h" />
     <ClInclude Include="src\opengl\OpenGLConfig.h" />
     <ClInclude Include="src\opengl\OpenGLMesh.h" />
+    <ClInclude Include="src\opengl\OpenGLRenderer.h" />
     <ClInclude Include="src\opengl\OpenGLTexture.h" />
   </ItemGroup>
   <ItemGroup>
@@ -76,7 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -148,7 +152,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)Libraries/include/;$(SolutionDir)Libraries/lib/</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

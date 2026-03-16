@@ -135,6 +135,24 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
 //  Vector3
 // ─────────────────────────────────────────────
 
+Vector3 Vector3::operator+(const Vector3& other) const
+{
+    return {
+        entries[0] + other.entries[0],
+        entries[1] + other.entries[1],
+        entries[2] + other.entries[2]
+    };
+}
+
+Vector3 Vector3::operator-(const Vector3& other) const
+{
+    return {
+        entries[0] - other.entries[0],
+        entries[1] - other.entries[1],
+        entries[2] - other.entries[2]
+    };
+}
+
 float Vector3::dot(Vector3 u, Vector3 v)
 {
     return u.entries[0] * v.entries[0]
