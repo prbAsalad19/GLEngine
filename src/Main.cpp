@@ -44,17 +44,12 @@ int main()
     OpenGLRenderer renderer(resources, "shaders/vertex.txt", "shaders/fragment.txt");
     renderer.init();
 
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow*, int w, int h)
-        {
-            glViewport(0, 0, w, h);
-        });
-
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
 
         int w, h;
-        glfwGetWindowSize(window, &w, &h);
+        glfwGetFramebufferSize(window, &w, &h);
         renderer.onResize(static_cast<unsigned int>(w),
             static_cast<unsigned int>(h));
 
