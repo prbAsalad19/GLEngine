@@ -5,14 +5,6 @@
 template<typename Tag, typename T>
 class ResourcePool
 {
-	explicit ResourcePool(uint32_t capacity = 64)
-	{
-		slots.resize(capacity);
-		freeList.resize(capacity);
-		for (uint32_t i = 0; i < capacity; ++i)
-			freeList[i] = i;
-	} //making the free list a non null vector
-
 	struct Slot
 	{
 		std::unique_ptr<T> resource;
@@ -22,11 +14,18 @@ class ResourcePool
 		Slot() : generation(0), active(false) {}
 	};
 
-	std::Vector<Slot> slots;
+	std::vector<Slot> slots;
 	std::vector<uint32_t> freeList;
 	std::unordered_map<std::string, uint32_t> cache;
 
 public:
+	explicit ResourcePool(uint32_t capacity = 64)
+	{
+		slots.resize(capacity);
+		freeList.resize(capacity);
+		for (uint32_t i = 0; i < capacity; ++i)
+			freeList[i] = i;
+	} //making the free list a non null vector
 
 	ResourceHandle<Tag> insert(const std::string& path, std::unique_ptr<T> resource)
 	{

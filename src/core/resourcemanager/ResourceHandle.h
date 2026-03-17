@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 
 struct MeshTag {};
 struct TextureTag {};
@@ -26,3 +27,15 @@ struct ResourceHandle
 using MeshHandle = ResourceHandle<MeshTag>;
 using TextureHandle = ResourceHandle<TextureTag>;
 using MaterialHandle = ResourceHandle<MaterialTag>;
+
+namespace std {
+	template<typename Tag>
+	struct hash<ResourceHandle<Tag>>
+	{
+		size_t operator()(const ResourceHandle<Tag>& handle) const noexcept
+		{
+			// Combina slot e generation per creare un hash unico
+			return std::hash<uint32_t>()(handle.slot) ^ (std::hash<uint32_t>()(handle.generation) << 1);
+		}
+	};
+}

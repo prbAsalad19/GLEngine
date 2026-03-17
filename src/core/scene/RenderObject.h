@@ -1,3 +1,4 @@
+#pragma once
 #include "core/resourcemanager/ResourceHandle.h"
 #include "core/scene/Transform.h"
 

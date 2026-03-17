@@ -10,10 +10,7 @@ public:
 	void setTarget(const Vector3& target);
 	void setFov(float fovDeg) { fov = fovDeg; }
 
-private:
 	Vector3 position;
 	float pitch, yaw;
 	float fov, nearPlane, farPlane;
-
-
 };

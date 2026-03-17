@@ -87,11 +87,14 @@
     <ClCompile Include="src\core\resourcemanager\ResourceManager.cpp">
       <Filter>File di origine\core\resource_manager</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\OpenGLRenderer.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\scene\Camera.cpp">
       <Filter>File di origine\core\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\OpenGLRenderer.cpp">
+      <Filter>File di origine\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\OpenGLShaderProgram.cpp">
+      <Filter>File di origine\opengl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -143,11 +146,14 @@
     <ClInclude Include="src\core\assets\Material.h">
       <Filter>File di intestazione\core\assets</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\OpenGLRenderer.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\scene\Camera.h">
       <Filter>File di intestazione\core\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLShaderProgram.h">
+      <Filter>File di intestazione\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLRenderer.h">
+      <Filter>File di intestazione\opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
