@@ -60,7 +60,6 @@ Materials
 
 Materials define how surfaces are rendered and may reference:
 
-- shaders
 - textures
 - rendering parameters
 
@@ -70,19 +69,30 @@ Materials define how surfaces are rendered and may reference:
 
 Resources are accessed through handles rather than raw pointers.
 
-Handles act as lightweight identifiers referencing resources stored in the ResourceManager.
+A handle contains two fields:
+
+- slot: index into the resource pool
+- generation: version counter that invalidates stale handles
+
+Handle structure:
+
+ResourceHandle
+├── slot
+└── generation
+
+Handles provide a null check via isNull(), which returns true when the handle
+has never been assigned. isNull() is a lightweight check and does not verify
+whether the resource is still alive — that validation is performed internally
+by the ResourcePool when resolving the handle.
 
 Example:
 
 MeshHandle mesh = resourceManager.loadMesh("cube.obj");
+if (!mesh.isNull()) { ... }
 
-Scene objects store handles instead of pointers.
+Scene objects store handles instead of raw pointers.
 
-Example:
-
-RenderObject.mesh = meshHandle;
-
-This approach improves safety and prevents invalid references.
+This approach improves safety and prevents dangling references.
 
 ---
 
@@ -94,13 +104,30 @@ Example:
 
 CubeMesh
 
-ObjectA  
-ObjectB  
+ObjectA
+ObjectB
 ObjectC
 
 The mesh is stored once in the ResourceManager and reused by all objects.
 
 This reduces memory usage and avoids redundant asset loading.
+
+---
+
+# Resource Pool
+
+Each resource type is managed by a dedicated ResourcePool.
+
+The pool uses a slot-based allocator with a free list for O(1) allocation
+and deallocation. Generation counters ensure that stale handles are safely
+rejected after a resource has been removed and its slot reused.
+
+Pool structure:
+
+ResourcePool
+├── slots (indexed storage)
+├── freeList (available slots, LIFO)
+└── cache (path → slot, prevents duplicate loads)
 
 ---
 
@@ -113,21 +140,21 @@ Example:
 mesh = resourceManager.getMesh(meshHandle)
 
 This resolves the handle and returns the corresponding resource.
+If the handle is stale or null, nullptr is returned.
 
 The scene does not interact directly with resource storage.
 
 ---
 
-# Resource Lifetime
+# Material Loading
 
-Resources remain in memory while they are registered in the ResourceManager.
+Materials are created programmatically via loadMaterial(textureHandle).
 
-Future improvements may include more advanced lifetime management techniques such as:
+Each unique combination of textures produces a unique material. If the same
+texture handle is passed again, the existing material is returned from cache
+rather than creating a duplicate.
 
-- reference counting
-- generation-based handles
-
-These systems help prevent invalid or dangling resource references.
+If no texture handle is provided, a default texture is used automatically.
 
 ---
 
@@ -138,10 +165,10 @@ Resources are typically loaded from external files.
 Examples:
 
 loadMesh("model.obj")
-
 loadTexture("brick.png")
 
-Once loaded, the resource is stored inside the ResourceManager and referenced through handles.
+Once loaded, the resource is stored inside the ResourceManager and referenced
+through handles.
 
 ---
 
@@ -149,9 +176,9 @@ Once loaded, the resource is stored inside the ResourceManager and referenced th
 
 Possible improvements to the resource system include:
 
-- resource caching
 - asynchronous asset loading
 - GPU resource management
 - hot-reloading for development
+- reference counting for automatic lifetime management
 
 These systems would improve scalability and usability as the engine evolves.
