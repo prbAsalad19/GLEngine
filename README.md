@@ -45,13 +45,13 @@ The scene contains objects that reference shared resources managed by the Resour
 
 Current features:
 
-- scene structure
-- render objects
-- resource manager
-- handle-based resource referencing
-- basic rendering pipeline
-
-The project is currently under active refactoring.
+- scene structure with render objects
+- handle-based resource management
+- generation-based resource pool (O(1) alloc/dealloc, stale handle detection)
+- material system with texture-based cache deduplication
+- transform system with quaternion rotation
+- camera with pitch/yaw and perspective projection
+- OpenGL rendering pipeline
 
 ---
 
