@@ -14,8 +14,6 @@ class ResourceManager
 	ResourcePool<TextureTag, OpenGLTexture> texturePool;
 	ResourcePool<MaterialTag, Material> materialPool;
 
-	std::unordered_map<TextureHandle, std::string> texturePaths;
-
 public:
 	const MeshHandle loadMesh(const std::string& filepath);
 	OpenGLMesh* getMesh(MeshHandle handle);
