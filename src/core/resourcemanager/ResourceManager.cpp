@@ -1,8 +1,3 @@
-#ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#endif
-
-#include <experimental/filesystem>
 #include "resourceManager.h"
 
 const MeshHandle ResourceManager::loadMesh(const std::string& path)
