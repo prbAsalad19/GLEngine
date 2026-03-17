@@ -45,7 +45,7 @@ void ResourceManager::deleteTexture(TextureHandle handle)
 const MaterialHandle ResourceManager::loadMaterial(TextureHandle albedo)
 {
     // Risolvi texture mancante prima di costruire la chiave
-    if (!albedo.isValid())
+    if (!albedo.isNull())
         albedo = loadTexture("img/defaultTexture.png");
 
     // Chiave unica basata sulle texture che compongono il materiale
