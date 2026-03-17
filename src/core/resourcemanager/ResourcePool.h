@@ -24,26 +24,26 @@ public:
 		slots.resize(capacity);
 		freeList.resize(capacity);
 		for (uint32_t i = 0; i < capacity; ++i)
-			freeList[i] = i;
+			freelist.push_back(i);
 	} //making the free list a non null vector
 
 	ResourceHandle<Tag> insert(const std::string& path, std::unique_ptr<T> resource)
 	{
-		auto it = cache.find(path);
-		if (it != cache.end())
-		{
-			uint32_t s = it->second;
-			return ResourceHandle<Tag>(s, slots[s].generation);
-		}
-
-		uint32_t s = freeList.front();
-		freeList.erase(freeList.begin());
-
-		slots[s].resource = std::move(resource);
-		slots[s].active = true;
-		cache[path] = s;
-
-		return ResourceHandle<Tag>(s, slots[s].generation);
+	    auto it = cache.find(path);
+	    if (it != cache.end())
+	    {
+	        uint32_t s = it->second;
+	        return ResourceHandle<Tag>(s, slots[s].generation);
+	    }
+	
+	    uint32_t s = freeList.back();   // O(1)
+	    freeList.pop_back();            // O(1)
+	
+	    slots[s].resource = std::move(resource);
+	    slots[s].active = true;
+	    cache[path] = s;
+	
+	    return ResourceHandle<Tag>(s, slots[s].generation);
 	}
 
 	T* get(ResourceHandle<Tag> handle)
@@ -54,20 +54,18 @@ public:
 
 	bool remove(ResourceHandle<Tag> handle)
 	{
-		if (!isValid(handle)) return false;
-		slots[handle.slot].active = false;
-		slots[handle.slot].resource.reset();
-		slots[handle.slot].generation++;
-
-		auto it = std::lower_bound(freeList.begin(), freeList.end(), handle.slot);
-		freeList.insert(it, handle.slot);
-
-		//pulizia cache
-		auto cacheIt = std::find_if(cache.begin(), cache.end(),
-			[&handle](const auto& pair) { return pair.second == handle.slot; });
-		if (cacheIt != cache.end()) cache.erase(cacheIt);
-
-		return true;
+	    if (!isValid(handle)) return false;
+	    slots[handle.slot].active = false;
+	    slots[handle.slot].resource.reset();
+	    slots[handle.slot].generation++;
+	
+	    freeList.push_back(handle.slot);  // O(1), ordine non importante
+	
+	    auto cacheIt = std::find_if(cache.begin(), cache.end(),
+	        [&handle](const auto& pair) { return pair.second == handle.slot; });
+	    if (cacheIt != cache.end()) cache.erase(cacheIt);
+	
+	    return true;
 	}
 
 private:
