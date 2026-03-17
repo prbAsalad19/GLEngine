@@ -94,9 +94,6 @@ static GLFWwindow* createWindow(int width, int height, const char* title)
         return nullptr;
     }
 
-    int w, h;
-    glfwGetWindowSize(window, &w, &h);
-    glViewport(0, 0, w, h);
     glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 
     std::cout << "OpenGL " << glGetString(GL_VERSION)
