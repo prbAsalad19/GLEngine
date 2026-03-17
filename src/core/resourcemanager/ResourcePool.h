@@ -22,9 +22,9 @@ public:
 	explicit ResourcePool(uint32_t capacity = 64)
 	{
 		slots.resize(capacity);
-		freeList.resize(capacity);
+		freeList.reserve(capacity);
 		for (uint32_t i = 0; i < capacity; ++i)
-			freelist.push_back(i);
+			freeList.push_back(i);
 	} //making the free list a non null vector
 
 	ResourceHandle<Tag> insert(const std::string& path, std::unique_ptr<T> resource)
