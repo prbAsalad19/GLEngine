@@ -45,7 +45,7 @@ void ResourceManager::deleteTexture(TextureHandle handle)
 const MaterialHandle ResourceManager::loadMaterial(TextureHandle albedo)
 {
     // Risolvi texture mancante prima di costruire la chiave
-    if (!albedo.isNull())
+    if (albedo.isNull())
         albedo = loadTexture("img/defaultTexture.png");
 
     // Chiave unica basata sulle texture che compongono il materiale
@@ -57,10 +57,6 @@ const MaterialHandle ResourceManager::loadMaterial(TextureHandle albedo)
 
     auto material = std::make_unique<Material>(mat);
     return materialPool.insert(key, std::move(material));
-	}
-
-	auto material = std::make_unique<Material>(mat);
-	return materialPool.insert("__generated__", std::move(material));
 }
 
 Material* ResourceManager::getMaterial(MaterialHandle handle)
