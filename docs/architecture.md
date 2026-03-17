@@ -127,6 +127,13 @@ This includes:
 
 The ResourceManager ensures that resources are loaded once and reused.
 
+Each resource type is stored in a dedicated ResourcePool. The pool uses
+slot-based allocation with a free list for O(1) alloc and dealloc, and
+generation counters to safely reject stale handles.
+
+Handles expose isNull() as a lightweight null check. Full validity
+(including generation matching) is enforced internally by the pool.
+
 Example:
 
 ResourceManager
