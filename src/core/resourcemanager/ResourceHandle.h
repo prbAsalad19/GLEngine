@@ -15,7 +15,7 @@ struct ResourceHandle
 	ResourceHandle() : slot(UINT32_MAX), generation(0) {}
 	ResourceHandle(uint32_t s, uint32_t g) : slot(s), generation(g) {}
 
-	bool isValid() const { return slot != UINT32_MAX; }
+	bool isNull() const { return slot != UINT32_MAX; }
 
 	bool operator==(const ResourceHandle& other) const
 	{
