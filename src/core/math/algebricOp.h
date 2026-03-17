@@ -13,6 +13,9 @@ class Vector3
 public:
     float entries[3];
 
+	Vector3 operator+(const Vector3& other) const;
+    Vector3 operator-(const Vector3& other) const;
+
     static float   dot(Vector3 u, Vector3 v);
     static Vector3 normalize(Vector3 v);
     static Vector3 cross(Vector3 u, Vector3 v);
@@ -88,21 +91,4 @@ public:
     static Quaternion fromEuler(const EulerAngles& e);
 };
 
-// ─────────────────────────────────────────────
-//  Transform  (T * R * S)
-// ─────────────────────────────────────────────
 
-class Transform
-{
-public:
-    Vector3    position;
-    Quaternion rotation;
-    Vector3    scale;
-
-    Transform();
-    static Transform getIdentityTransform();
-
-    mat4 getMatrix() const;
-    void setQuaternion(float x, float y, float z, float w);
-    void setEuler(const EulerAngles& e);
-};

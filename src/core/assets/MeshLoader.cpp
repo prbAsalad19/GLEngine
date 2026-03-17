@@ -1,9 +1,4 @@
-#include "config.h"
-#include "objLoader.h"
-
-// ─────────────────────────────────────────────
-//  MeshLoader
-// ─────────────────────────────────────────────
+#include "MeshLoader.h"
 
 bool MeshLoader::loadOBJ(const std::string& filepath, CPUMesh& out)
 {
@@ -50,9 +45,9 @@ bool MeshLoader::loadOBJ(const std::string& filepath, CPUMesh& out)
                 while (std::getline(ts, part, '/')) parts.push_back(part);
 
                 int v = -1, t = -1, n = -1;
-                int vertCount = static_cast<int>(out.getVertices().size()     / 3);
-                int texCount  = static_cast<int>(out.getTextureCoord().size() / 2);
-                int normCount = static_cast<int>(out.getNormals().size()      / 3);
+                int vertCount = static_cast<int>(out.getVertices().size() / 3);
+                int texCount = static_cast<int>(out.getTextureCoord().size() / 2);
+                int normCount = static_cast<int>(out.getNormals().size() / 3);
 
                 if (parts.size() >= 1 && !parts[0].empty())
                 {
@@ -78,9 +73,9 @@ bool MeshLoader::loadOBJ(const std::string& filepath, CPUMesh& out)
             // Fan triangulation for polygons with more than 3 vertices
             for (size_t i = 1; i + 1 < vIdx.size(); ++i)
             {
-                int vi[3] = { vIdx[0], vIdx[i], vIdx[i+1] };
-                int ti[3] = { tIdx[0], tIdx[i], tIdx[i+1] };
-                int ni[3] = { nIdx[0], nIdx[i], nIdx[i+1] };
+                int vi[3] = { vIdx[0], vIdx[i], vIdx[i + 1] };
+                int ti[3] = { tIdx[0], tIdx[i], tIdx[i + 1] };
+                int ni[3] = { nIdx[0], nIdx[i], nIdx[i + 1] };
 
                 for (int k = 0; k < 3; ++k)
                 {
@@ -95,16 +90,16 @@ bool MeshLoader::loadOBJ(const std::string& filepath, CPUMesh& out)
 }
 
 std::vector<Vertex> MeshLoader::toVertexArray(const CPUMesh& mesh,
-                                               std::vector<unsigned int>& outIndices)
+    std::vector<unsigned int>& outIndices)
 {
-    const auto& pos  = mesh.getVertices();
+    const auto& pos = mesh.getVertices();
     const auto& norm = mesh.getNormals();
-    const auto& uv   = mesh.getTextureCoord();
+    const auto& uv = mesh.getTextureCoord();
     const auto& face = mesh.getFaces();
     const int   type = mesh.getMeshType();
 
-    const int posCount  = static_cast<int>(pos.size()  / 3);
-    const int uvCount   = static_cast<int>(uv.size()   / 2);
+    const int posCount = static_cast<int>(pos.size() / 3);
+    const int uvCount = static_cast<int>(uv.size() / 2);
     const int normCount = static_cast<int>(norm.size() / 3);
 
     int step = 1;
@@ -176,73 +171,4 @@ std::vector<Vertex> MeshLoader::toVertexArray(const CPUMesh& mesh,
         }
     }
     return vertices;
-}
-
-// ─────────────────────────────────────────────
-//  Mesh
-// ─────────────────────────────────────────────
-
-Mesh::Mesh(const std::vector<Vertex>& vertices,
-           const std::vector<unsigned int>& indices,
-           Transform t)
-    : transform(t), indexCount(static_cast<unsigned int>(indices.size()))
-{
-    // Interleave vertex data: position (3) | normal (3) | uv (2)
-    // std::vector<float> data;
-    // data.reserve(vertices.size() * 8);
-    // for (const auto& v : vertices)
-    // {
-    //     data.push_back(v.position[0]); data.push_back(v.position[1]); data.push_back(v.position[2]);
-    //     data.push_back(v.normal[0]);   data.push_back(v.normal[1]);   data.push_back(v.normal[2]);
-    //     data.push_back(v.uv[0]);       data.push_back(v.uv[1]);
-    // }
-
-    glCreateVertexArrays(1, &VAO);
-    // glBindVertexArray(VAO);
-
-    glCreateBuffers(1, &VBO);
-    glNamedBufferStorage(VBO, vertices.size() * sizeof(Vertex), vertices.data(), 0);
-
-    glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(Vertex));
-    // constexpr int stride = 8 * sizeof(float);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-    // glEnableVertexAttribArray(1);
-    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-    // glEnableVertexAttribArray(2);
-    glEnableVertexArrayAttrib(VAO, 0);
-    glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, position));
-    glVertexArrayAttribBinding(VAO, 0, 0);
-    
-    glEnableVertexArrayAttrib(VAO, 1);
-    glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, normal));
-    glVertexArrayAttribBinding(VAO, 1, 0);
-
-    glEnableVertexArrayAttrib(VAO, 2);
-    glVertexArrayAttribFormat(VAO, 2, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, uv));
-    glVertexArrayAttribBinding(VAO, 2, 0);
-
-    glCreateBuffers(1, &EBO);
-    glNamedBufferStorage(EBO, indices.size() * sizeof(unsigned int), indices.data(), 0);
-
-    glVertexArrayElementBuffer(VAO, EBO);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-
-    glBindVertexArray(VAO);
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void Mesh::draw() const
-{
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-}
-
-Mesh::~Mesh()
-{
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
 }

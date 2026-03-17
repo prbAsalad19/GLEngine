@@ -135,6 +135,24 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
 //  Vector3
 // ─────────────────────────────────────────────
 
+Vector3 Vector3::operator+(const Vector3& other) const
+{
+    return {
+        entries[0] + other.entries[0],
+        entries[1] + other.entries[1],
+        entries[2] + other.entries[2]
+    };
+}
+
+Vector3 Vector3::operator-(const Vector3& other) const
+{
+    return {
+        entries[0] - other.entries[0],
+        entries[1] - other.entries[1],
+        entries[2] - other.entries[2]
+    };
+}
+
 float Vector3::dot(Vector3 u, Vector3 v)
 {
     return u.entries[0] * v.entries[0]
@@ -235,35 +253,4 @@ mat4 Quaternion::toMat4() const
     m.entries[8]  = 2.0f*(xz+wy);        m.entries[9]  = 2.0f*(yz-wx);        m.entries[10] = 1.0f - 2.0f*(xx+yy); m.entries[11] = 0.0f;
     m.entries[12] = 0.0f;                 m.entries[13] = 0.0f;                 m.entries[14] = 0.0f;                 m.entries[15] = 1.0f;
     return m;
-}
-
-// ─────────────────────────────────────────────
-//  Transform
-// ─────────────────────────────────────────────
-
-Transform::Transform()
-{
-    position.entries[0] = position.entries[1] = position.entries[2] = 0.0f;
-    rotation = Quaternion::identity();
-    scale.entries[0] = scale.entries[1] = scale.entries[2] = 1.0f;
-}
-
-Transform Transform::getIdentityTransform()
-{
-    return Transform();
-}
-
-mat4 Transform::getMatrix() const
-{
-    return mat4::create_matrix_transform(position) * rotation.toMat4() * mat4::create_scale(scale);
-}
-
-void Transform::setQuaternion(float x, float y, float z, float w)
-{
-    rotation = { x, y, z, w };
-}
-
-void Transform::setEuler(const EulerAngles& e)
-{
-    rotation = Quaternion::fromEuler(e);
 }
