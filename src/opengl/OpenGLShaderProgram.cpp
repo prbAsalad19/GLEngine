@@ -103,6 +103,9 @@ GLuint OpenGLShaderProgram::compileModule(const std::string& filepath, GLenum ty
     std::string src = ss.str();
     const char* csrc = src.c_str();
 
+    std::cout << "[Shader] " << filepath << " first chars: "
+        << src.substr(0, 50) << "\n";
+
     GLuint module = glCreateShader(type);
     glShaderSource(module, 1, &csrc, nullptr);
     glCompileShader(module);
