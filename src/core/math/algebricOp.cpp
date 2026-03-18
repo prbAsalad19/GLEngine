@@ -127,7 +127,7 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
     m.entries[5]  = 1.0f / t;
     m.entries[10] = -(f + n) / (f - n);
     m.entries[11] = -1.0f;
-    m.entries[14] = (2.0f * n * f) / (f - n);
+    m.entries[14] = -(2.0f * n * f) / (f - n);
     return m;
 }
 
