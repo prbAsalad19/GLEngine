@@ -118,16 +118,16 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
 {
     float halfFov = fovy * PI / 360.0f;
     float t = tanf(halfFov);
-    float n = -nearPlane;
-    float f = -farPlane;
+    float n = nearPlane;
+    float f = farPlane;
 
     mat4 m;
     for (int i = 0; i < 16; ++i) m.entries[i] = 0.0f;
     m.entries[0]  = 1.0f / (aspect * t);
     m.entries[5]  = 1.0f / t;
-    m.entries[10] = -(n + f) / (n - f);
+    m.entries[10] = -(f + n) / (f - n);
     m.entries[11] = -1.0f;
-    m.entries[14] = (2.0f * n * f) / (n - f);
+    m.entries[14] = (2.0f * n * f) / (f - n);
     return m;
 }
 

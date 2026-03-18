@@ -35,6 +35,8 @@ OpenGLShaderProgram::OpenGLShaderProgram(const std::string& vertPath,
 
     glDeleteShader(vs);
     glDeleteShader(fs);
+
+    std::cout << "[ShaderProgram] Program created, ID = " << m_programID << "\n";
 }
 
 OpenGLShaderProgram::~OpenGLShaderProgram()

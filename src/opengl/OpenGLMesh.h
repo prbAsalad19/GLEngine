@@ -9,7 +9,7 @@ public:
     ~OpenGLMesh();
 
     void draw() const;
-
+	unsigned int getIndexCount() const { return indexCount; }
 
 private:
     GLuint VAO, VBO, EBO;

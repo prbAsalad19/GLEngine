@@ -4,6 +4,8 @@ OpenGLMesh::OpenGLMesh(const std::vector<Vertex>& vertices,
     const std::vector<unsigned int>& indices)
     : indexCount(static_cast<unsigned int>(indices.size()))
 {
+    std::cout << "OpenGLMesh created | vertices: " << vertices.size()
+        << " | indices: " << indices.size() << "\n";
     glCreateVertexArrays(1, &VAO);
 
     glCreateBuffers(1, &VBO);

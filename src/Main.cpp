@@ -30,16 +30,18 @@ int main()
     RenderObject obj;
     obj.mesh = meshHandle;
     obj.material = matHandle;
-    obj.transform.position = { -0.1f, 0.5f, -1.0f };
-    obj.transform.scale = { 0.5f, 0.5f,  0.5f };
+    obj.transform.position = { 0.0f, 0.0f, 0.0f }; 
+    obj.transform.scale = { 0.5f, 0.5f, 0.5f };
     scene.objects.push_back(obj);
 
     Camera camera;
-    camera.position = { -5.0f, 0.0f, 3.0f };
-    camera.fov = 45.0f;
-    camera.nearPlane = 0.1f;
-    camera.farPlane = 100.0f;
+    camera.position = { 0.0f, 0.0f, 5.0f };
     camera.setTarget({ 0.0f, 0.0f, 0.0f });
+    //camera.position = { -5.0f, 0.0f, 3.0f };
+    camera.fov = 90.0f;
+    camera.nearPlane = 0.1f;
+    camera.farPlane = 1000.0f;
+    //camera.setTarget({ 0.0f, 0.0f, 0.0f });
 
     OpenGLRenderer renderer(resources, "shaders/vertex.txt", "shaders/fragment.txt");
     renderer.init();
