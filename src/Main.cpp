@@ -35,16 +35,30 @@ int main()
     scene.objects.push_back(obj);
 
     Camera camera;
-    camera.position = { 0.0f, 0.0f, 5.0f };
+    camera.position = { -5.0f, 0.0f, 3.0f };
     camera.setTarget({ 0.0f, 0.0f, 0.0f });
-    //camera.position = { -5.0f, 0.0f, 3.0f };
-    camera.fov = 90.0f;
+    camera.fov = 45.0f;
     camera.nearPlane = 0.1f;
     camera.farPlane = 1000.0f;
-    //camera.setTarget({ 0.0f, 0.0f, 0.0f });
 
     OpenGLRenderer renderer(resources, "shaders/vertex.txt", "shaders/fragment.txt");
     renderer.init();
+
+    //debug ------------------------------------------------------------------------------
+    auto printMat = [](const char* name, const mat4& m) {
+        std::cout << name << ":\n";
+        for (int row = 0; row < 4; ++row) {
+            for (int col = 0; col < 4; ++col)
+                std::cout << m.entries[col * 4 + row] << "\t";
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+        };
+
+    printMat("projection", camera.getProjectionMatrix(1280.0f / 720.0f));
+    printMat("view", camera.getViewMatrix());
+    printMat("model", scene.objects[0].transform.getMatrix());
+    //debug ------------------------------------------------------------------------------
 
     while (!glfwWindowShouldClose(window))
     {
