@@ -1,25 +1,29 @@
 #version 460 core
 
 layout (location = 0) in vec3 vertexPos;
-
 layout (location = 1) in vec3 vertexNormal;
-
 layout (location = 2) in vec2 vertexUV;
 
 out vec2 fragmentTexCoord;
 
-uniform mat4 model;
+layout (std140, binding = 0) uniform CameraData
+{
+    mat4 view;
+    mat4 projection;
+    mat4 viewProjection;
+    vec4 cameraPosition;
+};
 
-uniform mat4 view;
+layout (std140, binding = 1) uniform TransformData
+{
+    mat4 models[1024];
+};
 
-uniform mat4 projection;
+uniform int tranformIndex;
 
 void main()
-
 {
-
-    gl_Position = projection * view * model * vec4(vertexPos, 1.0);
-
+    mat4 model = models[tranformIndex];
+    gl_Position = viewProjection * model * vec4(vertexPos, 1.0);
     fragmentTexCoord = vertexUV;
-
 }

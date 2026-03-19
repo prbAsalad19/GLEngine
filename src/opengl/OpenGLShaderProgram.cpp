@@ -55,6 +55,15 @@ void OpenGLShaderProgram::unbind() const
     glUseProgram(0);
 }
 
+void OpenGLShaderProgram::setUniformBlockBinding(const std::string& blockName, GLuint bindingPoint) const
+{
+    GLuint index = glGetUniformBlockIndex(m_programID, blockName.c_str());
+    if (index != GL_INVALID_INDEX)
+        glUniformBlockBinding(m_programID, index, bindingPoint);
+    else
+        std::cout << "[ShaderProgram] Uniform block '" << blockName << "' not found.\n";
+}
+
 void OpenGLShaderProgram::setInt(const std::string& name, int value) const
 {
     glUniform1i(getUniformLocation(name), value);
@@ -73,6 +82,11 @@ void OpenGLShaderProgram::setMat4(const std::string& name, const mat4& matrix) c
 void OpenGLShaderProgram::setVec3(const std::string& name, const Vector3& v) const
 {
     glUniform3fv(getUniformLocation(name), 1, v.entries);
+}
+
+void OpenGLShaderProgram::setUInt(const std::string& name, unsigned int value) const
+{
+    glUniform1ui(getUniformLocation(name), value);
 }
 
 GLint OpenGLShaderProgram::getUniformLocation(const std::string& name) const
