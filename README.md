@@ -9,7 +9,7 @@ It is designed with modularity in mind so that the rendering backend can evolve 
 ---
 # Screenshots
 
-![screenshot](docs/screenshots/screenshot.png)
+![screenshot](docs/screenshots/Screenshot.png)
 
 ---
 
