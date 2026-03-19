@@ -31,6 +31,7 @@ int main()
     obj.mesh = meshHandle;
     obj.material = matHandle;
     obj.transform.position = { 0.0f, 0.0f, 0.0f }; 
+    obj.transform.setEuler({-135.0f, 0.0f, 90.0f});
     obj.transform.scale = { 0.5f, 0.5f, 0.5f };
     scene.objects.push_back(obj);
 

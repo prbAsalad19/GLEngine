@@ -7,6 +7,11 @@ The project focuses on exploring **clean engine architecture** rather than build
 It is designed with modularity in mind so that the rendering backend can evolve over time.
 
 ---
+# Screenshots
+
+![screenshot](docs/screenshots/screenshot.png)
+
+---
 
 # Goals
 
