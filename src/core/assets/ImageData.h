@@ -1,6 +1,8 @@
 #pragma once
 #include "core/CoreConfig.h"
 
+//#define STB_FAILURE_USERMSG
+
 struct Image
 {
     unsigned char* data = nullptr;
@@ -14,4 +16,6 @@ struct Image
 
     // IMPORTANTE: libera la memoria stb
     void free();
+
+    std::string getFailureReason() const;
 };

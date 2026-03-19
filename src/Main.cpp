@@ -23,7 +23,7 @@ int main()
     ResourceManager resources;
 
     MeshHandle     meshHandle = resources.loadMesh("assets/teapot_with_uv.obj");
-    TextureHandle  texHandle = resources.loadTexture("img/texture.jpg");
+    TextureHandle  texHandle = resources.loadTexture("C:/Users/simon/vs_projects/GLEngine/img/whiteTexture.png");
     MaterialHandle matHandle = resources.loadMaterial(texHandle);
 
     Scene scene;
@@ -45,19 +45,19 @@ int main()
     renderer.init();
 
     //debug ------------------------------------------------------------------------------
-    auto printMat = [](const char* name, const mat4& m) {
-        std::cout << name << ":\n";
-        for (int row = 0; row < 4; ++row) {
-            for (int col = 0; col < 4; ++col)
-                std::cout << m.entries[col * 4 + row] << "\t";
-            std::cout << "\n";
-        }
-        std::cout << "\n";
-        };
+    //auto printMat = [](const char* name, const mat4& m) {
+    //    std::cout << name << ":\n";
+    //    for (int row = 0; row < 4; ++row) {
+    //        for (int col = 0; col < 4; ++col)
+    //            std::cout << m.entries[col * 4 + row] << "\t";
+    //        std::cout << "\n";
+    //    }
+    //    std::cout << "\n";
+    //    };
 
-    printMat("projection", camera.getProjectionMatrix(1280.0f / 720.0f));
-    printMat("view", camera.getViewMatrix());
-    printMat("model", scene.objects[0].transform.getMatrix());
+    //printMat("projection", camera.getProjectionMatrix(1280.0f / 720.0f));
+    //printMat("view", camera.getViewMatrix());
+    //printMat("model", scene.objects[0].transform.getMatrix());
     //debug ------------------------------------------------------------------------------
 
     while (!glfwWindowShouldClose(window))

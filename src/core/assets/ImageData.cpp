@@ -17,3 +17,9 @@ void Image::free()
     if (data) { stbi_image_free(data); data = nullptr; }
     valid = false;
 }
+
+std::string Image::getFailureReason() const
+{
+    if (valid) return "Image is valid.";
+    return stbi_failure_reason();
+}
