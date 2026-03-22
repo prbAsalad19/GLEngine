@@ -153,6 +153,15 @@ Vector3 Vector3::operator-(const Vector3& other) const
     };
 }
 
+Vector3 Vector3::operator*(float scalar) const
+{
+    return {
+        entries[0] * scalar,
+        entries[1] * scalar,
+        entries[2] * scalar
+    };
+}
+
 float Vector3::dot(Vector3 u, Vector3 v)
 {
     return u.entries[0] * v.entries[0]
@@ -179,6 +188,52 @@ Vector3 Vector3::cross(Vector3 u, Vector3 v)
        -(u.entries[0] * v.entries[2] - u.entries[2] * v.entries[0]),
         u.entries[0] * v.entries[1] - u.entries[1] * v.entries[0]
     };
+}
+
+// ─────────────────────────────────────────────
+//  Vector2
+// ─────────────────────────────────────────────
+
+Vector2 Vector2::operator+(const Vector2& other) const
+{
+    return {
+        entries[0] + other.entries[0],
+        entries[1] + other.entries[1]
+    };
+}
+
+Vector2 Vector2::operator-(const Vector2& other) const
+{
+    return {
+        entries[0] - other.entries[0],
+        entries[1] - other.entries[1]
+    };
+}
+
+Vector2 Vector2::operator*(float scalar) const
+{
+    return {
+        entries[0] * scalar,
+        entries[1] * scalar
+    };
+}
+
+float Vector2::dot(Vector2 u, Vector2 v)
+{
+    return u.entries[0] * v.entries[0]
+        + u.entries[1] * v.entries[1];
+}
+
+void Vector2::normalize()
+{
+    float mag = sqrtf(entries[0]*entries[0] + entries[1]*entries[1]);
+	if (mag > 0.0f) { entries[0] /= mag; entries[1] /= mag; }
+}
+
+Vector2 Vector2::normalize(Vector2 v)
+{
+    v.normalize();
+    return v;
 }
 
 // ─────────────────────────────────────────────
@@ -253,4 +308,28 @@ mat4 Quaternion::toMat4() const
     m.entries[8]  = 2.0f*(xz+wy);        m.entries[9]  = 2.0f*(yz-wx);        m.entries[10] = 1.0f - 2.0f*(xx+yy); m.entries[11] = 0.0f;
     m.entries[12] = 0.0f;                 m.entries[13] = 0.0f;                 m.entries[14] = 0.0f;                 m.entries[15] = 1.0f;
     return m;
+}
+
+EulerAngles Quaternion::getEuler() const
+{
+    EulerAngles e;
+
+    // pitch (X) — rotazione attorno all'asse X
+    float sinPitch = 2.0f * (w * x + y * z);
+    float cosPitch = 1.0f - 2.0f * (x * x + y * y);
+    e.pitch = atan2f(sinPitch, cosPitch) * 180.0f / PI;
+
+    // yaw (Y) — rotazione attorno all'asse Y
+    float sinYaw = 2.0f * (w * y - z * x);
+    if (fabsf(sinYaw) >= 1.0f)
+        e.yaw = copysignf(90.0f, sinYaw);  // gimbal lock — clamp a ±90°
+    else
+        e.yaw = asinf(sinYaw) * 180.0f / PI;
+
+    // roll (Z) — rotazione attorno all'asse Z
+    float sinRoll = 2.0f * (w * z + x * y);
+    float cosRoll = 1.0f - 2.0f * (y * y + z * z);
+    e.roll = atan2f(sinRoll, cosRoll) * 180.0f / PI;
+
+    return e;
 }

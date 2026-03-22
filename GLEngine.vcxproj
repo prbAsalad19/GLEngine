@@ -26,6 +26,7 @@
     <ClCompile Include="src\core\resourcemanager\ResourceManager.cpp" />
     <ClCompile Include="src\core\scene\Camera.cpp" />
     <ClCompile Include="src\core\scene\Transform.cpp" />
+    <ClCompile Include="src\core\ui\UICanvas.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\opengl\glad.c" />
     <ClCompile Include="src\opengl\OpenGLMesh.cpp" />
@@ -48,6 +49,8 @@
     <ClInclude Include="src\core\scene\RenderObject.h" />
     <ClInclude Include="src\core\scene\Scene.h" />
     <ClInclude Include="src\core\scene\Transform.h" />
+    <ClInclude Include="src\core\ui\UICanvas.h" />
+    <ClInclude Include="src\core\ui\UIElement.h" />
     <ClInclude Include="src\opengl\OpenGLConfig.h" />
     <ClInclude Include="src\opengl\OpenGLMesh.h" />
     <ClInclude Include="src\opengl\OpenGLRenderer.h" />

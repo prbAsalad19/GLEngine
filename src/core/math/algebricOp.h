@@ -11,14 +11,41 @@
 class Vector3
 {
 public:
-    float entries[3];
+    union
+    {
+        float entries[3];
+        struct { float x; float y; float z; };
+    };
 
 	Vector3 operator+(const Vector3& other) const;
     Vector3 operator-(const Vector3& other) const;
+	Vector3 operator*(float scalar) const;
 
     static float   dot(Vector3 u, Vector3 v);
     static Vector3 normalize(Vector3 v);
     static Vector3 cross(Vector3 u, Vector3 v);
+    void           normalize();
+};
+
+// ─────────────────────────────────────────────
+//  Vector2
+// ─────────────────────────────────────────────
+
+class Vector2
+{
+public:
+    union
+    {
+        float entries[2];
+        struct { float x; float y; };
+    };
+
+    Vector2 operator+(const Vector2& other) const;
+    Vector2 operator-(const Vector2& other) const;
+    Vector2 operator*(float scalar) const;
+
+    static float   dot(Vector2 u, Vector2 v);
+    static Vector2 normalize(Vector2 v);
     void           normalize();
 };
 
@@ -89,6 +116,7 @@ public:
     static Quaternion multiply(const Quaternion& a, const Quaternion& b);
     static Quaternion fromAxisAngle(Vector3 axis, float angleDeg);
     static Quaternion fromEuler(const EulerAngles& e);
+    EulerAngles getEuler() const;
 };
 
 
