@@ -4,6 +4,8 @@
 #include "core/scene/Camera.h"
 #include "core/resourcemanager/ResourceManager.h"
 #include "opengl/OpenGLRenderer.h"
+#include "opengl/OpenGLUIRenderer.h"
+#include "core/ui/UICanvas.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -71,6 +73,17 @@ int main()
     OpenGLRenderer renderer(resources, "shaders/vertex.txt", "shaders/fragment.txt");
     renderer.init();
 
+    int w, h;
+    glfwGetFramebufferSize(window, &w, &h);
+    OpenGLUIRenderer UIrenderer(resources, w, h, "shaders/UIShaderv.txt", "shaders/UIShaderf.txt");
+    UIrenderer.init();
+    // fuori dal while, dopo init
+    std::cout << "[Main] UI renderer initialized, canvas loaded\n";
+
+    UICanvas canvas;
+
+    canvas.loadUI("assets/testUI.json");
+
     //debug ------------------------------------------------------------------------------
     //auto printMat = [](const char* name, const mat4& m) {
     //    std::cout << name << ":\n";
@@ -115,6 +128,7 @@ int main()
             static_cast<unsigned int>(h));
 
         renderer.render(scene, camera);
+        UIrenderer.render(canvas);
         glfwSwapBuffers(window);
     }
 

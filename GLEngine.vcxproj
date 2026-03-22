@@ -63,11 +63,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\fragment.txt" />
+    <Text Include="shaders\UIShaderf.txt" />
+    <Text Include="shaders\UIShaderv.txt" />
     <Text Include="shaders\vertex.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\UIShader.frag" />
-    <None Include="shaders\UIShader.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

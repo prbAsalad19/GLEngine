@@ -1,7 +1,7 @@
 #include "OpenGLUIRenderer.h"
 
-OpenGLUIRenderer::OpenGLUIRenderer(ResourceManager& resources, unsigned int width, unsigned int height)
-    : m_shader("shaders/ui_vertex.txt", "shaders/ui_fragment.txt")
+OpenGLUIRenderer::OpenGLUIRenderer(ResourceManager& resources, unsigned int width, unsigned int height, const std::string& vertPath, const std::string& fragPath)
+    : m_shader(vertPath, fragPath)
     , m_width(width)
     , m_height(height)
     , m_resources(resources)
@@ -43,6 +43,10 @@ void OpenGLUIRenderer::init()
 
     // collega EBO al VAO
     glVertexArrayElementBuffer(m_VAO, m_EBO);
+
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR)
+        std::cout << "[UIRenderer] init OpenGL error: " << err << "\n";
 }
 
 void OpenGLUIRenderer::render(const UICanvas& canvas)
@@ -62,7 +66,14 @@ void OpenGLUIRenderer::render(const UICanvas& canvas)
 
     m_shader.bind();
 
+    // in render() dopo m_shader.bind()
+    //GLenum err;
+    //while ((err = glGetError()) != GL_NO_ERROR)
+    //    std::cout << "[UIRenderer] render OpenGL error: " << err << "\n";
+
     m_shader.setVec2("screenSize", { (float)m_width, (float)m_height });
+
+    //std::cout << "[UIRenderer] Drawing " << m_batch.getIndices().size() << " indices\n";
 
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES,
@@ -71,6 +82,11 @@ void OpenGLUIRenderer::render(const UICanvas& canvas)
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+
+    //std::cout << "[UIRenderer] VAO=" << m_VAO
+    //    << " VBO=" << m_VBO
+    //    << " EBO=" << m_EBO
+    //    << " shader valid=" << (m_shader.getProgramID() != 0) << "\n";
 }
 
 void OpenGLUIRenderer::shutdown()

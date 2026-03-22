@@ -114,8 +114,18 @@ void UICanvas::loadUI(const std::string& filepath)
 		}
 
 		elements.push_back(element);
+	}
+	resolveBindings();
 
-		resolveBindings();
+	std::cout << "[UICanvas] Loaded " << elements.size() << " elements\n";
+	for (const auto& el : elements)
+	{
+		std::cout << "  element: " << el.id
+			<< " type: " << (int)el.type
+			<< " color: " << el.color[0] << " " << el.color[1] << " " << el.color[2] << " " << el.color[3] << "\n";
+		if (el.geometry.mode == UIGeometryMode::Simple)
+			std::cout << "  pos: " << el.geometry.simple.position.x << " " << el.geometry.simple.position.y
+			<< " size: " << el.geometry.simple.size.x << " " << el.geometry.simple.size.y << "\n";
 	}
 }
 

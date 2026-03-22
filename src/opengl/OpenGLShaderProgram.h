@@ -23,6 +23,7 @@ public:
     void setVec2(const std::string& name, const Vector2& v)   const;
     void setVec3(const std::string& name, const Vector3& v)   const;
     void setUInt(const std::string& name, unsigned int value) const;
+    GLuint getProgramID() const { return m_programID; }
 
 private:
     GLuint m_programID = 0;
