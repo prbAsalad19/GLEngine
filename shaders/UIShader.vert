@@ -1,0 +1,21 @@
+﻿#version 460 core
+
+layout (location = 0) in vec2 vertexPos;
+layout (location = 1) in vec2 vertexUV;
+layout (location = 2) in vec4 vertexColor;
+
+out vec2 fragUV;
+out vec4 fragColor;
+
+uniform vec2 screenSize;
+
+void main()
+{
+    // converti da pixel a NDC
+    // pixel (0,0) = top-left → NDC (-1, 1)
+    vec2 ndc = (vertexPos / screenSize) * 2.0 - 1.0;
+    gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0);
+
+    fragUV    = vertexUV;
+    fragColor = vertexColor;
+}

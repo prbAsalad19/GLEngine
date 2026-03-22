@@ -27,12 +27,14 @@
     <ClCompile Include="src\core\scene\Camera.cpp" />
     <ClCompile Include="src\core\scene\Transform.cpp" />
     <ClCompile Include="src\core\ui\UICanvas.cpp" />
+    <ClCompile Include="src\core\ui\UIQuadBatch.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\opengl\glad.c" />
     <ClCompile Include="src\opengl\OpenGLMesh.cpp" />
     <ClCompile Include="src\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="src\opengl\OpenGLShaderProgram.cpp" />
     <ClCompile Include="src\opengl\OpenGLTexture.cpp" />
+    <ClCompile Include="src\opengl\OpenGLUIRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\assets\CPUMesh.h" />
@@ -51,15 +53,21 @@
     <ClInclude Include="src\core\scene\Transform.h" />
     <ClInclude Include="src\core\ui\UICanvas.h" />
     <ClInclude Include="src\core\ui\UIElement.h" />
+    <ClInclude Include="src\core\ui\UIQuadBatch.h" />
     <ClInclude Include="src\opengl\OpenGLConfig.h" />
     <ClInclude Include="src\opengl\OpenGLMesh.h" />
     <ClInclude Include="src\opengl\OpenGLRenderer.h" />
     <ClInclude Include="src\opengl\OpenGLShaderProgram.h" />
     <ClInclude Include="src\opengl\OpenGLTexture.h" />
+    <ClInclude Include="src\opengl\OpenGLUIRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\fragment.txt" />
     <Text Include="shaders\vertex.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\UIShader.frag" />
+    <None Include="shaders\UIShader.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
