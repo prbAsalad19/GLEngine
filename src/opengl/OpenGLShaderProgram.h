@@ -20,8 +20,10 @@ public:
     void setInt(const std::string& name, int value)          const;
     void setFloat(const std::string& name, float value)        const;
     void setMat4(const std::string& name, const mat4& matrix) const;
+    void setVec2(const std::string& name, const Vector2& v)   const;
     void setVec3(const std::string& name, const Vector3& v)   const;
     void setUInt(const std::string& name, unsigned int value) const;
+    GLuint getProgramID() const { return m_programID; }
 
 private:
     GLuint m_programID = 0;

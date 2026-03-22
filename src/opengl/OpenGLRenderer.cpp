@@ -64,75 +64,80 @@ void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
 void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (scene.objects.empty()) return;
 
-	if (scene.objects.empty()) return;
-
-    // construction of the render command and staging buffer
-	std::vector<RenderCommand> commands;
-	commands.reserve(scene.objects.size());
+    // Raggruppa per mesh — stessa mesh = stessa draw call
+    // key:   MeshHandle
+    // value: lista di { transformIndex, materialHandle }
+    std::unordered_map<MeshHandle, std::vector<std::pair<uint32_t, MaterialHandle>>> groups;
 
     uint32_t index = 0;
     for (const RenderObject& obj : scene.objects)
     {
-        if (index >= MAX_RENDER_OBJECTS)
-        {
-            std::cout << "Warning: scene has more than " << MAX_RENDER_OBJECTS
-                << " objects; some will not be rendered.\n";
-            break;
-		}
+        if (index >= MAX_RENDER_OBJECTS) break;
 
-		mat4 model = obj.transform.getMatrix();
-		m_transformStagingBuffer[index] = model;
-
-        RenderCommand cmd;
-		cmd.transformIndex = index;
-        cmd.mesh = obj.mesh;
-        cmd.material = obj.material;
-		commands.push_back(cmd);
-
-		++index;
+        m_transformStagingBuffer[index] = obj.transform.getMatrix();
+        groups[obj.mesh].push_back({ index, obj.material });
+        ++index;
     }
 
-
-    CameraUBOData cameraData;
-    mat4 view = camera.getViewMatrix();
-    mat4 projection = camera.getProjectionMatrix(
-		static_cast<float>(m_width) / static_cast<float>(m_height));
-	mat4 vp = projection * view; // pre-multiplied on CPU — saves work in every shader invocation
-
-    memcpy(cameraData.view, view.entries, sizeof(float) * 16);
-    memcpy(cameraData.projection, projection.entries, sizeof(float) * 16);
-	memcpy(cameraData.viewProjection, vp.entries, sizeof(float) * 16);
-    cameraData.cameraPosition[0] = camera.position.entries[0];
-    cameraData.cameraPosition[1] = camera.position.entries[1];
-    cameraData.cameraPosition[2] = camera.position.entries[2];
-    cameraData._padding = 0.0f;
-
-    glNamedBufferSubData(m_cameraUBO, 0, sizeof(CameraUBOData), &cameraData);
-
+    // Upload transforms — tutti in un colpo solo
     glNamedBufferSubData(m_transformUBO, 0,
         sizeof(mat4) * index,
         m_transformStagingBuffer);
 
+    // Upload camera UBO — invariato rispetto a prima
+    CameraUBOData cameraData;
+    mat4 view = camera.getViewMatrix();
+    mat4 projection = camera.getProjectionMatrix(
+        static_cast<float>(m_width) / static_cast<float>(m_height));
+    mat4 vp = projection * view;
+    memcpy(cameraData.view, view.entries, sizeof(float) * 16);
+    memcpy(cameraData.projection, projection.entries, sizeof(float) * 16);
+    memcpy(cameraData.viewProjection, vp.entries, sizeof(float) * 16);
+    cameraData.cameraPosition[0] = camera.position.entries[0];
+    cameraData.cameraPosition[1] = camera.position.entries[1];
+    cameraData.cameraPosition[2] = camera.position.entries[2];
+    cameraData._padding = 0.0f;
+    glNamedBufferSubData(m_cameraUBO, 0, sizeof(CameraUBOData), &cameraData);
+
     m_shader.bind();
 
-    for (const RenderCommand& cmd : commands)
+    for (auto& [meshHandle, instances] : groups)
     {
-        OpenGLMesh* mesh = m_resources.getMesh(cmd.mesh);
-        Material* material = m_resources.getMaterial(cmd.material);
-        if (!mesh || !material) continue;
+        OpenGLMesh* mesh = m_resources.getMesh(meshHandle);
+        if (!mesh) continue;
 
-		m_shader.setUInt("transformIndex", cmd.transformIndex);
-
-        auto it = material->textures.find("albedo");
-        if (it != material->textures.end())
+        // Per ora usa il materiale della prima istanza del gruppo.
+        // Con materiali diversi sulla stessa mesh servirebbe un'altra
+        // suddivisione — ma è un caso raro e lo gestirai dopo.
+        MaterialHandle matHandle = instances[0].second;
+        Material* material = m_resources.getMaterial(matHandle);
+        if (material)
         {
-            OpenGLTexture* tex = m_resources.getTexture(it->second);
-            if (tex) tex->use(0);
+            auto it = material->textures.find("albedo");
+            if (it != material->textures.end())
+            {
+                OpenGLTexture* tex = m_resources.getTexture(it->second);
+                if (tex) tex->use(0);
+            }
         }
 
-		mesh->draw();
-	}
+        // I transform di questo gruppo sono contigui nel buffer?
+        // No — potrebbero essere sparsi. Dobbiamo riordinarli.
+        // Copiamo gli indici in un sotto-buffer compatto e aggiorniamo
+        // il UBO con solo quelli di questo gruppo, partendo da offset 0.
+        std::vector<mat4> groupTransforms;
+        groupTransforms.reserve(instances.size());
+        for (auto& [tIdx, _] : instances)
+            groupTransforms.push_back(m_transformStagingBuffer[tIdx]);
 
-    m_shader.bind();
+        glNamedBufferSubData(m_transformUBO, 0,
+            sizeof(mat4) * groupTransforms.size(),
+            groupTransforms.data());
+
+        mesh->drawInstanced(static_cast<uint32_t>(instances.size()));
+    }
+
+    m_shader.unbind();
 }

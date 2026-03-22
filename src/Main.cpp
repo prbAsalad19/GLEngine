@@ -4,6 +4,8 @@
 #include "core/scene/Camera.h"
 #include "core/resourcemanager/ResourceManager.h"
 #include "opengl/OpenGLRenderer.h"
+#include "opengl/OpenGLUIRenderer.h"
+#include "core/ui/UICanvas.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -13,6 +15,10 @@ static GLFWwindow* createWindow(int width, int height, const char* title);
 
 int main()
 {
+    constexpr float FIXED_STEP = 1.0f / 50.0f;
+    float accumulator = 0.0f;
+    double prevTime = glfwGetTime();
+
     GLFWwindow* window = createWindow(1280, 720, "engine");
     if (!window)
     {
@@ -27,13 +33,35 @@ int main()
     MaterialHandle matHandle = resources.loadMaterial(texHandle);
 
     Scene scene;
-    RenderObject obj;
-    obj.mesh = meshHandle;
-    obj.material = matHandle;
-    obj.transform.position = { 0.0f, 0.0f, 0.0f }; 
-    obj.transform.setEuler({-135.0f, 0.0f, 90.0f});
-    obj.transform.scale = { 0.5f, 0.5f, 0.5f };
-    scene.objects.push_back(obj);
+    //RenderObject obj;
+    //obj.mesh = meshHandle;
+    //obj.material = matHandle;
+    //obj.transform.position = { -0.5f, 0.0f, -0.5f }; 
+    //obj.transform.setEuler({-135.0f, 0.0f, 90.0f});
+    //obj.transform.scale = { 0.5f, 0.5f, 0.5f };
+    //scene.objects.push_back(obj);
+    // 9 teiere in griglia 3x3
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            RenderObject obj;
+            obj.mesh = meshHandle;
+            obj.material = matHandle;
+            obj.transform.position = { i * 4.0f - 4.0f, j * 4.0f - 4.0f, 0.0f };
+            obj.transform.scale = { 0.5f, 0.5f, 0.5f };
+			obj.transform.setEuler({ 90.0f, 0.0f, 90.0f });
+            scene.objects.push_back(obj);
+        }
+    }
+
+    float t = 0.0f;
+
+
+    Vector3    startPos = { 0.0f, 0.0f, 0.0f };
+    Vector3    endPos = { 0.0f, 0.0f, 4.0f };
+    Quaternion startRot = Quaternion::identity();
+    Quaternion endRot = Quaternion::fromAxisAngle({ 0.0f, 0.0f, 1.0f }, 180.0f);
 
     Camera camera;
     camera.position = { -5.0f, 0.0f, 3.0f };
@@ -44,6 +72,17 @@ int main()
 
     OpenGLRenderer renderer(resources, "shaders/vertex.txt", "shaders/fragment.txt");
     renderer.init();
+
+    int w, h;
+    glfwGetFramebufferSize(window, &w, &h);
+    OpenGLUIRenderer UIrenderer(resources, w, h, "shaders/UIShaderv.txt", "shaders/UIShaderf.txt");
+    UIrenderer.init();
+    // fuori dal while, dopo init
+    std::cout << "[Main] UI renderer initialized, canvas loaded\n";
+
+    UICanvas canvas;
+
+    canvas.loadUI("assets/testUI.json");
 
     //debug ------------------------------------------------------------------------------
     //auto printMat = [](const char* name, const mat4& m) {
@@ -61,8 +100,26 @@ int main()
     //printMat("model", scene.objects[0].transform.getMatrix());
     //debug ------------------------------------------------------------------------------
 
+
     while (!glfwWindowShouldClose(window))
     {
+        double now = glfwGetTime();
+        float  dt = static_cast<float>(now - prevTime);
+        prevTime = now;
+
+        accumulator += dt;
+
+        // FixedUpdate — timestep fisso, gira N volte se necessario
+        while (accumulator >= FIXED_STEP)
+        {
+            // fisica, collisioni, logica deterministica
+            accumulator -= FIXED_STEP;
+        }
+		//scene.objects[0].transform.rotate({ 0.0f, 1.0f, 0.0f }, 20.0f * dt);
+        scene.objects[0].transform.lerpSmooth(startPos, endPos, t);
+        scene.objects[0].transform.slerpSmooth(startRot, endRot, t);
+        scene.objects[4].transform.rotate({ 0.0f, 0.0f, 1.0f }, 90.0f * dt);
+
         glfwPollEvents();
 
         int w, h;
@@ -71,6 +128,7 @@ int main()
             static_cast<unsigned int>(h));
 
         renderer.render(scene, camera);
+        UIrenderer.render(canvas);
         glfwSwapBuffers(window);
     }
 

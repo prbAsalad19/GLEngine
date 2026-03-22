@@ -55,6 +55,12 @@
     <Filter Include="File di intestazione\core\resource_manager">
       <UniqueIdentifier>{650aca9a-1bf2-475e-aa45-c42685cd403a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="File di intestazione\core\ui">
+      <UniqueIdentifier>{568693cf-b86a-4ffa-be12-d1c61ee84de9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di origine\core\ui">
+      <UniqueIdentifier>{40ddb4e1-5308-4ad3-8e71-591b4892d5ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -95,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="src\opengl\OpenGLShaderProgram.cpp">
       <Filter>File di origine\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\ui\UICanvas.cpp">
+      <Filter>File di origine\core\ui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="src\opengl\OpenGLRenderer.h">
       <Filter>File di intestazione\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\ui\UIElement.h">
+      <Filter>File di intestazione\core\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\ui\UICanvas.h">
+      <Filter>File di intestazione\core\ui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

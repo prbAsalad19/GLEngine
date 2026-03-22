@@ -37,6 +37,18 @@ void OpenGLMesh::draw() const
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 }
 
+void OpenGLMesh::drawInstanced(uint32_t instanceCount) const
+{
+    glBindVertexArray(VAO);
+    glDrawElementsInstanced(
+        GL_TRIANGLES,
+        indexCount,
+        GL_UNSIGNED_INT,
+        0,
+        instanceCount
+    );
+}
+
 OpenGLMesh::~OpenGLMesh()
 {
     glDeleteVertexArrays(1, &VAO);

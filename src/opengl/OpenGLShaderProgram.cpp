@@ -79,6 +79,11 @@ void OpenGLShaderProgram::setMat4(const std::string& name, const mat4& matrix) c
     glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, matrix.entries);
 }
 
+void OpenGLShaderProgram::setVec2(const std::string& name, const Vector2& v) const
+{
+    glUniform2fv(getUniformLocation(name), 1, v.entries);
+}
+
 void OpenGLShaderProgram::setVec3(const std::string& name, const Vector3& v) const
 {
     glUniform3fv(getUniformLocation(name), 1, v.entries);
