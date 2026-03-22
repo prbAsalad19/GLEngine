@@ -14,6 +14,8 @@ public:
     void bindString(const std::string& key, std::function<std::string()> fn);
     void bindFloat(const std::string& key, float* ptr);
     void bindString(const std::string& key, std::string* ptr);
+    float       getValue(const std::string& elementId) const;
+    std::string getString(const std::string& elementId) const;
 
 	void loadUI(const std::string& filePath);
 

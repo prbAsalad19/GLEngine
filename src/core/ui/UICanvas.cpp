@@ -23,6 +23,7 @@ void UICanvas::bindFloat(const std::string& key, float* ptr)
 void UICanvas::bindString(const std::string& key, std::function<std::string()> fn) 
 {
 	stringRegistry[key] = fn;
+	resolveBindings();
 }
 
 void UICanvas::bindString(const std::string& key, std::string* ptr)
@@ -114,6 +115,7 @@ void UICanvas::loadUI(const std::string& filepath)
 
 		elements.push_back(element);
 
+		resolveBindings();
 	}
 }
 
@@ -146,4 +148,22 @@ void UICanvas::resolveBindings()
 			}
 		}
 	}
+}
+
+float UICanvas::getValue(const std::string& elementId) const
+{
+	if (activeNumeric.contains(elementId))
+	{
+		return activeNumeric.at(elementId)();
+	}
+	return 0.0f;
+}
+
+std::string UICanvas::getString(const std::string& elementId) const
+{
+	if (activeString.contains(elementId))
+	{
+		return activeString.at(elementId)();
+	}
+	return "";
 }
