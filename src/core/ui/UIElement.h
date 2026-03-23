@@ -30,7 +30,12 @@ struct UIElement
 {
     std::string   id;
     UIElementType type;
-    float      color[4];
+    float         color[4];
     std::string   valueKey;
     UIGeometry    geometry;
+
+    // Used by Label elements.
+    // For dynamic text, leave this empty and use valueKey + bindString().
+    std::string   text;
+    float         fontSize = 0.0f;  // 0 = use atlas default size
 };

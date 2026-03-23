@@ -14,7 +14,7 @@ void main()
     {
         // RGB from vertex color (text tint), alpha from font atlas coverage.
         float coverage = texture(uTexture, fragUV).a;
-        screenColor = vec4(fragColor.rgb, fragColor.a * coverage);
+	screenColor = fragColor * vec4(1.0, 1.0, 1.0, coverage);
     }
     else
     {

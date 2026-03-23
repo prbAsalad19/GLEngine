@@ -3,6 +3,7 @@
 #include "core/ui/UIQuadBatch.h"
 #include "core/resourcemanager/ResourceManager.h"
 #include "opengl/OpenGLShaderProgram.h"
+#include "OpenGLFontAtlas.h"
 
 static constexpr uint32_t MAX_UI_VERTICES = 4096;  // 1024 quad
 static constexpr uint32_t MAX_UI_INDICES = 6144;  // 1024 quad * 6 indici
@@ -12,10 +13,13 @@ public:
     OpenGLUIRenderer(ResourceManager& m_resources, unsigned int width, unsigned int height, const std::string& vertPath, const std::string& fragPath);
     ~OpenGLUIRenderer();
     void init();
+    bool loadFont(const std::string& filepath, float pixelHeight);
     void render(const UICanvas& canvas);
+    void onResize(unsigned int width, unsigned int height);
     void shutdown();
 
 private:
+    void uploadAndDraw(const UIQuadBatch&);
     ResourceManager& m_resources;
     OpenGLShaderProgram m_shader;
     unsigned int        m_width = 1280;
@@ -23,4 +27,6 @@ private:
 
     GLuint m_VAO, m_VBO, m_EBO;
 	UIQuadBatch m_batch;
+    FontAtlas                       m_fontAtlas;
+    std::unique_ptr<OpenGLFontAtlas> m_gpuFontAtlas;
 };

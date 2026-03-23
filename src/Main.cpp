@@ -19,6 +19,8 @@ int main()
     float accumulator = 0.0f;
     double prevTime = glfwGetTime();
 
+    unsigned int currentFps = 0.0f;
+
     GLFWwindow* window = createWindow(1280, 720, "engine");
     if (!window)
     {
@@ -75,14 +77,17 @@ int main()
 
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
-    OpenGLUIRenderer UIrenderer(resources, w, h, "shaders/UIShaderv.txt", "shaders/UIShaderf.txt");
+    OpenGLUIRenderer UIrenderer(resources, w, h, "shaders/UIShaderv1.txt", "shaders/UIShadervf1.txt");
     UIrenderer.init();
-    // fuori dal while, dopo init
+    //// fuori dal while, dopo init
     std::cout << "[Main] UI renderer initialized, canvas loaded\n";
 
     UICanvas canvas;
 
     canvas.loadUI("assets/testUI.json");
+
+    UIrenderer.loadFont("assets/fonts/arial.ttf", 24.0f);
+    canvas.bindString("fps", [&]() { return "FPS: " + std::to_string(currentFps);  });
 
     //debug ------------------------------------------------------------------------------
     //auto printMat = [](const char* name, const mat4& m) {
@@ -106,6 +111,9 @@ int main()
         double now = glfwGetTime();
         float  dt = static_cast<float>(now - prevTime);
         prevTime = now;
+        static float fpsAccum = 0.0f;
+        static float timeAccum = 0.0f;
+        static int   fpsCount = 0;
 
         accumulator += dt;
 
@@ -124,8 +132,20 @@ int main()
 
         int w, h;
         glfwGetFramebufferSize(window, &w, &h);
-        renderer.onResize(static_cast<unsigned int>(w),
-            static_cast<unsigned int>(h));
+        renderer.onResize(w, h);
+        UIrenderer.onResize(w, h);
+
+        fpsAccum += 1.0f / dt;
+        timeAccum += dt;
+        fpsCount++;
+
+        if (timeAccum >= 0.25f)  // aggiorna ogni mezzo secondo
+        {
+            currentFps = static_cast<unsigned int>(fpsAccum / fpsCount);
+            fpsAccum = 0.0f;
+            timeAccum = 0.0f;
+            fpsCount = 0;
+        }
 
         renderer.render(scene, camera);
         UIrenderer.render(canvas);

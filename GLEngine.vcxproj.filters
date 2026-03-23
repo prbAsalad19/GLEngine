@@ -105,6 +105,18 @@
     <ClCompile Include="src\core\ui\UICanvas.cpp">
       <Filter>File di origine\core\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\ui\FontAtlas.cpp">
+      <Filter>File di origine\core\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\OpenGLUIRenderer.cpp">
+      <Filter>File di origine\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\OpenGLFontAtlas.cpp">
+      <Filter>File di origine\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\ui\UIQuadBatch.cpp">
+      <Filter>File di origine\core\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\CoreConfig.h">
@@ -170,12 +182,30 @@
     <ClInclude Include="src\core\ui\UICanvas.h">
       <Filter>File di intestazione\core\ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\ui\UIQuadBatch.h">
+      <Filter>File di intestazione\core\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\ui\FontAtlas.h">
+      <Filter>File di intestazione\core\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLUIRenderer.h">
+      <Filter>File di intestazione\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\OpenGLFontAtlas.h">
+      <Filter>File di intestazione\opengl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\fragment.txt">
       <Filter>shaders</Filter>
     </Text>
     <Text Include="shaders\vertex.txt">
+      <Filter>shaders</Filter>
+    </Text>
+    <Text Include="shaders\UIShaderf.txt">
+      <Filter>shaders</Filter>
+    </Text>
+    <Text Include="shaders\UIShaderv.txt">
       <Filter>shaders</Filter>
     </Text>
   </ItemGroup>

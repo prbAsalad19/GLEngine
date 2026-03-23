@@ -3,10 +3,30 @@
     {
       "id": "test_panel",
       "type": "panel",
-      "color": "#FF0000FF",
+      "color": "#1A1A2EFF",
       "geometry": {
         "position": [50, 50],
-        "size": [200, 100]
+        "size": [300, 80]
+      }
+    },
+    {
+      "id": "title_label",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "GLEngine",
+      "geometry": {
+        "position": [66, 68],
+        "size": [268, 44]
+      }
+    },
+    {
+      "id": "fps_label",
+      "type": "label",
+      "color": "#00FF88FF",
+      "valueKey": "fps",
+      "geometry": {
+        "position": [66, 100],
+        "size": [268, 28]
       }
     }
   ]

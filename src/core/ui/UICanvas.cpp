@@ -78,6 +78,13 @@ void UICanvas::loadUI(const std::string& filepath)
 			element.valueKey = el["valueKey"].get<std::string>();
 		}
 
+		if (el.contains("text"))
+			element.text = el["text"].get<std::string>();
+
+		if (el.contains("fontSize"))
+			element.fontSize = el["fontSize"].get<float>();
+
+
 		if (el["geometry"].contains("points")) //free mode
 		{
 			element.geometry.mode = UIGeometryMode::Free;

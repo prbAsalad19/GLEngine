@@ -2,6 +2,7 @@
 #include "core/CoreConfig.h"
 #include "UIElement.h"
 #include "UICanvas.h"
+#include "FontAtlas.h"
 
 struct UIVertex
 {
@@ -15,7 +16,8 @@ public:
 	UIQuadBatch();
 	~UIQuadBatch();
 	void push(const UIElement& element);
-	void buildFromCanvas(const UICanvas& canvas);
+	void pushLabel(const UIElement& element, const FontAtlas& atlas, const std::string& resolvedText);
+	void buildFromCanvas(const UICanvas& canvas, const FontAtlas& atlas);
 	void clear();
 
 	// Getters

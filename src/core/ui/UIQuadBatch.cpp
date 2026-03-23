@@ -91,13 +91,91 @@ void UIQuadBatch::push(const UIElement& element)
     indices.push_back(base + 3);
 }
 
-void UIQuadBatch::buildFromCanvas(const UICanvas& canvas)
+void UIQuadBatch::pushLabel(const UIElement& element,
+    const FontAtlas& atlas,
+    const std::string& resolvedText)
+{
+    //std::cout << "[pushLabel] text='" << resolvedText
+    //    << "' pos=" << element.geometry.simple.position.x
+    //    << "," << element.geometry.simple.position.y << "\n";
+    if (resolvedText.empty()) return;
+
+    float cursorX = element.geometry.simple.position.x;
+    float cursorY = element.geometry.simple.position.y;
+
+    // baseline = top of the label box + ascent approximated as pixelHeight * 0.8
+    // stb_truetype bearingY is already relative to baseline.
+    float baseline = cursorY + atlas.getPixelHeight() * 0.8f;
+
+    for (char c : resolvedText)
+    {
+        if (c == '\n')
+        {
+            cursorX = element.geometry.simple.position.x;
+            baseline += atlas.getLineHeight();
+            continue;
+        }
+
+        const GlyphMetrics& g = atlas.getGlyph(c);
+        if (g.width == 0.0f || g.height == 0.0f)
+        {
+            cursorX += g.advance;
+            continue;
+        }
+
+        // Pixel-space quad corners
+        float x0 = cursorX + g.bearingX;
+        float y0 = baseline + g.bearingY;          // bearingY is negative above baseline
+        float x1 = x0 + g.width;
+        float y1 = y0 + g.height;
+
+        unsigned int baseIndex = static_cast<unsigned int>(vertices.size());
+
+        // 4 vertices — color carries the text tint (RGBA)
+        auto makeVert = [&](float px, float py, float u, float v) -> UIVertex
+            {
+                UIVertex vert;
+                vert.position = { px, py };
+                vert.uv = { u, v };
+                vert.color[0] = element.color[0];
+                vert.color[1] = element.color[1];
+                vert.color[2] = element.color[2];
+                vert.color[3] = element.color[3];
+                return vert;
+            };
+
+        vertices.push_back(makeVert(x0, y0, g.uvX0, g.uvY0));  // top-left
+        vertices.push_back(makeVert(x1, y0, g.uvX1, g.uvY0));  // top-right
+        vertices.push_back(makeVert(x1, y1, g.uvX1, g.uvY1));  // bottom-right
+        vertices.push_back(makeVert(x0, y1, g.uvX0, g.uvY1));  // bottom-left
+
+        indices.push_back(baseIndex + 0);
+        indices.push_back(baseIndex + 1);
+        indices.push_back(baseIndex + 2);
+        indices.push_back(baseIndex + 2);
+        indices.push_back(baseIndex + 3);
+        indices.push_back(baseIndex + 0);
+
+        cursorX += g.advance;
+    }
+}
+
+void UIQuadBatch::buildFromCanvas(const UICanvas& canvas, const FontAtlas& atlas)
 {
     clear();
-    for (const auto& el : canvas.getElements())
+    for (const UIElement& el : canvas.getElements())
     {
-        push(el);
+        if (el.type == UIElementType::Label)
+        {
+            // Prefer dynamic string binding; fall back to static text field.
+            std::string displayText = canvas.getString(el.id);
+            if (displayText.empty())
+                displayText = el.text;
+            pushLabel(el, atlas, displayText);
+        }
+        else
+        {
+            push(el);
+        }
     }
-    //std::cout << "[UIQuadBatch] Built " << vertices.size() << " vertices, "
-    //    << indices.size() << " indices\n";
 }

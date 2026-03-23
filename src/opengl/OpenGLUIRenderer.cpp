@@ -1,4 +1,4 @@
-#include "OpenGLUIRenderer.h"
+Ôªø#include "OpenGLUIRenderer.h"
 
 OpenGLUIRenderer::OpenGLUIRenderer(ResourceManager& resources, unsigned int width, unsigned int height, const std::string& vertPath, const std::string& fragPath)
     : m_shader(vertPath, fragPath)
@@ -18,25 +18,25 @@ void OpenGLUIRenderer::init()
     glCreateBuffers(1, &m_VBO);
     glCreateBuffers(1, &m_EBO);
 
-    // alloca il VBO dinamico ó GL_DYNAMIC_STORAGE_BIT permette di aggiornarlo dopo
-    // MAX_UI_VERTICES Ë una costante tipo 4096 ó abbastanza per tutti i quad UI
+    // alloca il VBO dinamico ‚Äî GL_DYNAMIC_STORAGE_BIT permette di aggiornarlo dopo
+    // MAX_UI_VERTICES √® una costante tipo 4096 ‚Äî abbastanza per tutti i quad UI
     glNamedBufferStorage(m_VBO, sizeof(UIVertex) * MAX_UI_VERTICES, nullptr, GL_DYNAMIC_STORAGE_BIT);
     glNamedBufferStorage(m_EBO, sizeof(unsigned int) * MAX_UI_INDICES, nullptr, GL_DYNAMIC_STORAGE_BIT);
 
     // collega VBO al VAO
     glVertexArrayVertexBuffer(m_VAO, 0, m_VBO, 0, sizeof(UIVertex));
 
-    // attributo 0 ó position (Vector2 = 2 float)
+    // attributo 0 ‚Äî position (Vector2 = 2 float)
     glEnableVertexArrayAttrib(m_VAO, 0);
     glVertexArrayAttribFormat(m_VAO, 0, 2, GL_FLOAT, GL_FALSE, offsetof(UIVertex, position));
     glVertexArrayAttribBinding(m_VAO, 0, 0);
 
-    // attributo 1 ó uv (Vector2 = 2 float)
+    // attributo 1 ‚Äî uv (Vector2 = 2 float)
     glEnableVertexArrayAttrib(m_VAO, 1);
     glVertexArrayAttribFormat(m_VAO, 1, 2, GL_FLOAT, GL_FALSE, offsetof(UIVertex, uv));
     glVertexArrayAttribBinding(m_VAO, 1, 0);
 
-    // attributo 2 ó color (4 float)
+    // attributo 2 ‚Äî color (4 float)
     glEnableVertexArrayAttrib(m_VAO, 2);
     glVertexArrayAttribFormat(m_VAO, 2, 4, GL_FLOAT, GL_FALSE, offsetof(UIVertex, color));
     glVertexArrayAttribBinding(m_VAO, 2, 0);
@@ -49,44 +49,104 @@ void OpenGLUIRenderer::init()
         std::cout << "[UIRenderer] init OpenGL error: " << err << "\n";
 }
 
+bool OpenGLUIRenderer::loadFont(const std::string& filepath, float pixelHeight)
+{
+    if (!m_fontAtlas.load(filepath, pixelHeight))
+        return false;
+
+    m_gpuFontAtlas = std::make_unique<OpenGLFontAtlas>(m_fontAtlas);
+    return true;
+}
+
 void OpenGLUIRenderer::render(const UICanvas& canvas)
 {
-    m_batch.buildFromCanvas(canvas);
-
-    glNamedBufferSubData(m_VBO, 0,
-        m_batch.getVertices().size() * sizeof(UIVertex),
-        m_batch.getVertices().data());
-
-    glNamedBufferSubData(m_EBO, 0,
-        m_batch.getIndices().size() * sizeof(unsigned int),
-        m_batch.getIndices().data());
-
+    // Salva e disabilita depth test ‚Äî l'UI va sempre sopra la scena 3D
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);   // ‚Üê AGGIUNGI QUESTO
+    // Assicura blending attivo per l'alpha del testo
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     m_shader.bind();
 
-    // in render() dopo m_shader.bind()
-    //GLenum err;
-    //while ((err = glGetError()) != GL_NO_ERROR)
-    //    std::cout << "[UIRenderer] render OpenGL error: " << err << "\n";
+    m_shader.setVec2("screenSize", { static_cast<float>(m_width), static_cast<float>(m_height) });
 
-    m_shader.setVec2("screenSize", { (float)m_width, (float)m_height });
+    // Pass 1: elementi solidi ‚Äî nessuna texture, uIsText = 0
+    m_shader.setInt("uTexture", 0);
 
-    //std::cout << "[UIRenderer] Drawing " << m_batch.getIndices().size() << " indices\n";
+
+
+    UIQuadBatch solidBatch;
+    for (const UIElement& el : canvas.getElements())
+    {
+        if (el.type != UIElementType::Label)
+            solidBatch.push(el);
+    }
+    if (!solidBatch.getVertices().empty())
+        uploadAndDraw(solidBatch);
+
+    // Pass 2: testo ‚Äî font texture su unit 0, uIsText = 1
+    if (m_gpuFontAtlas)
+    {
+        m_shader.setInt("uIsText", 1);
+        m_shader.setInt("uTexture", 0);
+
+
+        UIQuadBatch textBatch;
+        for (const UIElement& el : canvas.getElements())
+        {
+            if (el.type == UIElementType::Label)
+            {
+                std::string displayText = canvas.getString(el.id);
+                if (displayText.empty()) displayText = el.text;
+                textBatch.pushLabel(el, m_fontAtlas, displayText);
+            }
+        }
+        if (!textBatch.getVertices().empty())
+        {
+            m_gpuFontAtlas->bind(0);
+            //std::cout << "[UIRenderer] textBatch vertices: " << textBatch.getVertices().size()
+            //    << " indices: " << textBatch.getIndices().size() << "\n";
+            uploadAndDraw(textBatch);
+            //GLenum err;
+            //while ((err = glGetError()) != GL_NO_ERROR)
+            //    std::cout << "[UIRenderer] GL error after text draw: " << err << "\n";
+        }
+    }
+    //std::cout << "[UIRenderer] screenSize: " << m_width << "x" << m_height << "\n";
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR)
+        std::cout << "[UIRenderer] OpenGL error: " << err << "\n";
+
+    m_shader.unbind();
+
+    // Ripristina depth test per il renderer 3D al prossimo frame
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+}
+
+void OpenGLUIRenderer::onResize(unsigned int width, unsigned int height)
+{
+    m_width = width;
+    m_height = height;
+}
+
+void OpenGLUIRenderer::uploadAndDraw(const UIQuadBatch& batch)
+{
+    const auto& verts = batch.getVertices();
+    const auto& indices = batch.getIndices();
+    if (verts.empty()) return;
+
+    glNamedBufferSubData(m_VBO, 0,
+        verts.size() * sizeof(UIVertex), verts.data());
+    glNamedBufferSubData(m_EBO, 0,
+        indices.size() * sizeof(unsigned int), indices.data());
 
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES,
-        static_cast<GLsizei>(m_batch.getIndices().size()),
+        static_cast<GLsizei>(indices.size()),
         GL_UNSIGNED_INT, 0);
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-
-    //std::cout << "[UIRenderer] VAO=" << m_VAO
-    //    << " VBO=" << m_VBO
-    //    << " EBO=" << m_EBO
-    //    << " shader valid=" << (m_shader.getProgramID() != 0) << "\n";
+    glBindVertexArray(0);
 }
 
 void OpenGLUIRenderer::shutdown()
