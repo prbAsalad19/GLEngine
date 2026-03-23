@@ -12,6 +12,20 @@
 #include <iostream>
 
 static GLFWwindow* createWindow(int width, int height, const char* title);
+struct RenderContext
+{
+    OpenGLRenderer* renderer;
+    OpenGLUIRenderer* ui;
+};
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+
+    auto ctx = static_cast<RenderContext*>(glfwGetWindowUserPointer(window));
+
+    ctx->renderer->onResize(width, height);
+    ctx->ui->onResize(width, height);
+}
 
 int main()
 {
@@ -74,6 +88,7 @@ int main()
 
     OpenGLRenderer renderer(resources, "shaders/vertex.txt", "shaders/fragment.txt");
     renderer.init();
+    std::cout << "[Main] 3D renderer initialized\n";
 
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
@@ -81,6 +96,11 @@ int main()
     UIrenderer.init();
     //// fuori dal while, dopo init
     std::cout << "[Main] UI renderer initialized, canvas loaded\n";
+
+    RenderContext ctx{ &renderer, &UIrenderer };
+
+    glfwSetWindowUserPointer(window, &ctx);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     UICanvas canvas;
 
@@ -129,11 +149,6 @@ int main()
         scene.objects[4].transform.rotate({ 0.0f, 0.0f, 1.0f }, 90.0f * dt);
 
         glfwPollEvents();
-
-        int w, h;
-        glfwGetFramebufferSize(window, &w, &h);
-        renderer.onResize(w, h);
-        UIrenderer.onResize(w, h);
 
         fpsAccum += 1.0f / dt;
         timeAccum += dt;
