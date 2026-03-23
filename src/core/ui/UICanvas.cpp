@@ -1,4 +1,4 @@
-#include "UICanvas.h"
+﻿#include "UICanvas.h"
 
 UICanvas::UICanvas() 
 {
@@ -47,9 +47,67 @@ UIElementType UICanvas::parseType(const std::string& typeStr)
 	if (typeStr == "icon") {
 		return UIElementType::Icon;
 	}
+	if (typeStr == "button") {
+		hasButtons = true;
+		return UIElementType::Button;
+	}
 	
 	std::cout << "[UICanvas] Unknown element type: " << typeStr << "\n";
 	return UIElementType::Label;
+}
+
+void UICanvas::processClickAt(double xpos, double ypos)
+{
+	if (!hasButtons) return;
+
+	// loop su tutti gli elementi
+	for (const auto& el : elements)
+	{
+		if (el.type != UIElementType::Button) continue;
+
+		bool hit = false;
+
+		if (el.geometry.mode == UIGeometryMode::Simple)
+		{
+			float x0 = el.geometry.simple.position.x;
+			float y0 = el.geometry.simple.position.y;
+			float x1 = x0 + el.geometry.simple.size.x;
+			float y1 = y0 + el.geometry.simple.size.y;
+
+			// hit test semplice: il mouse dentro il rettangolo
+			if (xpos >= x0 && xpos <= x1 && ypos >= y0 && ypos <= y1)
+				hit = true;
+		}
+		else if (el.geometry.mode == UIGeometryMode::Free)
+		{
+			Vector2 p = { xpos, ypos };
+			auto isLeft = [](Vector2 v1, Vector2 v2, Vector2 p) {
+				return (v2.x - v1.x) * (p.y - v1.y) - (v2.y - v1.y) * (p.x - v1.x);
+				};
+
+			// Assumiamo che el.geometry.free contenga i 4 vertici A, B, C, D
+			Vector2 a = el.geometry.free.points[0];
+			Vector2 b = el.geometry.free.points[1];
+			Vector2 c = el.geometry.free.points[2];
+			Vector2 d = el.geometry.free.points[3];
+
+			// Il punto deve essere a sinistra di tutti i lati (CCW)
+			if (isLeft(a, b, p) > 0 &&
+				isLeft(b, c, p) > 0 &&
+				isLeft(c, d, p) > 0 &&
+				isLeft(d, a, p) > 0)
+			{
+				hit = true;
+			}
+		}
+
+		if (hit)
+		{
+			// il pulsante è stato cliccato → dispatch
+			onButtonClick(el.id);
+			break; // se vuoi solo un pulsante per click
+		}
+	}
 }
 
 void UICanvas::loadUI(const std::string& filepath)
@@ -63,12 +121,18 @@ void UICanvas::loadUI(const std::string& filepath)
 
 	elements.clear();
 		
+	hasButtons = false;
+	buttonsList.clear();
 	for (const auto& el : data["elements"])
 	{
 		UIElement element;
 
 		element.id = el["id"].get<std::string>();
 		element.type = parseType(el["type"].get<std::string>());
+		if (element.type == UIElementType::Button)
+		{
+			buttonsList.push_back(element.id);
+		}
 
 		std::string hex = el["color"].get<std::string>();
 		parseColor(hex, element.color);

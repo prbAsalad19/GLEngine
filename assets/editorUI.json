@@ -1,0 +1,195 @@
+{
+  "elements": [
+    {
+      "id": "editor_sidebar_bg",
+      "type": "panel",
+      "color": "#1E1E24FF",
+      "geometry": {
+        "position": [980, 0],
+        "size": [300, 720]
+      }
+    },
+    {
+      "id": "editor_title",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "GLEngine UI Editor",
+      "geometry": {
+        "position": [1000, 20],
+        "size": [260, 30]
+      }
+    },
+    {
+      "id": "editor_separator_1",
+      "type": "panel",
+      "color": "#444455FF",
+      "geometry": {
+        "position": [1000, 60],
+        "size": [260, 2]
+      }
+    },
+    {
+      "id": "lbl_selected_title",
+      "type": "label",
+      "color": "#AAAAAAFF",
+      "text": "Elemento Selezionato:",
+      "geometry": {
+        "position": [1000, 80],
+        "size": [260, 20]
+      }
+    },
+    {
+      "id": "lbl_selected_value",
+      "type": "label",
+      "color": "#00FF88FF",
+      "valueKey": "selected_element_id",
+      "geometry": {
+        "position": [1000, 105],
+        "size": [260, 24]
+      }
+    },
+    {
+      "id": "lbl_move_title",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "Sposta Elemento (Pixel):",
+      "geometry": {
+        "position": [1000, 180],
+        "size": [260, 24]
+      }
+    },
+    {
+      "id": "btn_up_bg",
+      "type": "panel",
+      "color": "#3A3A4AFF",
+      "geometry": {
+        "position": [1110, 230],
+        "size": [40, 40]
+      }
+    },
+    {
+      "id": "btn_up_txt",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "^",
+      "geometry": {
+        "position": [1125, 240],
+        "size": [20, 20]
+      }
+    },
+    {
+      "id": "btn_left_bg",
+      "type": "panel",
+      "color": "#3A3A4AFF",
+      "geometry": {
+        "position": [1060, 280],
+        "size": [40, 40]
+      }
+    },
+    {
+      "id": "btn_left_txt",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "<",
+      "geometry": {
+        "position": [1075, 290],
+        "size": [20, 20]
+      }
+    },
+    {
+      "id": "btn_right_bg",
+      "type": "panel",
+      "color": "#3A3A4AFF",
+      "geometry": {
+        "position": [1160, 280],
+        "size": [40, 40]
+      }
+    },
+    {
+      "id": "btn_right_txt",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": ">",
+      "geometry": {
+        "position": [1175, 290],
+        "size": [20, 20]
+      }
+    },
+    {
+      "id": "btn_down_bg",
+      "type": "panel",
+      "color": "#3A3A4AFF",
+      "geometry": {
+        "position": [1110, 280],
+        "size": [40, 40]
+      }
+    },
+    {
+      "id": "btn_down_txt",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "v",
+      "geometry": {
+        "position": [1125, 290],
+        "size": [20, 20]
+      }
+    },
+    {
+      "id": "editor_separator_2",
+      "type": "panel",
+      "color": "#444455FF",
+      "geometry": {
+        "position": [1000, 350],
+        "size": [260, 2]
+      }
+    },
+    {
+      "id": "lbl_add_title",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "Aggiungi Nuovo:",
+      "geometry": {
+        "position": [1000, 380],
+        "size": [260, 24]
+      }
+    },
+    {
+      "id": "btn_add_panel_bg",
+      "type": "panel",
+      "color": "#2A5298FF",
+      "geometry": {
+        "position": [1000, 420],
+        "size": [120, 40]
+      }
+    },
+    {
+      "id": "btn_add_panel_txt",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "+ Panel",
+      "geometry": {
+        "position": [1025, 430],
+        "size": [80, 20]
+      }
+    },
+    {
+      "id": "btn_add_label_bg",
+      "type": "panel",
+      "color": "#2A5298FF",
+      "geometry": {
+        "position": [1140, 420],
+        "size": [120, 40]
+      }
+    },
+    {
+      "id": "btn_add_label_txt",
+      "type": "label",
+      "color": "#FFFFFFFF",
+      "text": "+ Label",
+      "geometry": {
+        "position": [1165, 430],
+        "size": [80, 20]
+      }
+    }
+  ]
+}

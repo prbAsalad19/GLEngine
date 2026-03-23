@@ -125,6 +125,27 @@ void OpenGLUIRenderer::render(const UICanvas& canvas)
     glEnable(GL_CULL_FACE);
 }
 
+void OpenGLUIRenderer::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    // Controlliamo solo il click sinistro premuto
+    if (button != GLFW_MOUSE_BUTTON_LEFT || action != GLFW_PRESS)
+        return;
+
+    // Recuperiamo il puntatore alla Canvas dal user pointer di GLFW
+    UICanvas* canvas = static_cast<UICanvas*>(glfwGetWindowUserPointer(window));
+    if (!canvas) return;
+
+    // Flag per capire se ci sono pulsanti attivi
+    bool clickable = canvas->hasClickableButtons(); // implementa tu questa funzione
+    if (!clickable) return;
+
+    // Otteniamo posizione del mouse
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+
+    // Chiamata alla funzione interna che scorre i pulsanti
+    canvas->processClickAt(xpos, ypos); // implementi tu qui la logica che ritorna l'ID e dispatch
+}
+
 void OpenGLUIRenderer::onResize(unsigned int width, unsigned int height)
 {
     m_width = width;

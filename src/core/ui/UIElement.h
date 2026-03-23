@@ -7,7 +7,8 @@ enum class UIElementType : uint8_t
 	Label,
 	ProgressBar,
 	Panel,
-	Icon
+	Icon,
+    Button
 };
 
 enum class UIGeometryMode : uint8_t

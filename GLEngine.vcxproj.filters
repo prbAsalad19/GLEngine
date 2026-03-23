@@ -61,6 +61,12 @@
     <Filter Include="File di origine\core\ui">
       <UniqueIdentifier>{40ddb4e1-5308-4ad3-8e71-591b4892d5ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="File di intestazione\uieditor">
+      <UniqueIdentifier>{47e655cd-01e5-48cd-be0a-5b6d61f2eabf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di origine\uieditor">
+      <UniqueIdentifier>{dcd75032-a0fa-48da-b334-630419338b58}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -116,6 +122,9 @@
     </ClCompile>
     <ClCompile Include="src\core\ui\UIQuadBatch.cpp">
       <Filter>File di origine\core\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\uieditor\UIEditor.cpp">
+      <Filter>File di origine\uieditor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="src\opengl\OpenGLFontAtlas.h">
       <Filter>File di intestazione\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\uieditor\UIEditor.h">
+      <Filter>File di intestazione\uieditor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

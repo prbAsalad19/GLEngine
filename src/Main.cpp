@@ -6,6 +6,7 @@
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLUIRenderer.h"
 #include "core/ui/UICanvas.h"
+#include "uieditor/UIEditor.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -29,6 +30,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 int main()
 {
+    bool activeEditor = true;
+
+    if (activeEditor)
+    {
+        UIEditor editor;
+        editor.init();
+    }
+
     constexpr float FIXED_STEP = 1.0f / 50.0f;
     float accumulator = 0.0f;
     double prevTime = glfwGetTime();

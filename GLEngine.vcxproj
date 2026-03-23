@@ -37,6 +37,7 @@
     <ClCompile Include="src\opengl\OpenGLShaderProgram.cpp" />
     <ClCompile Include="src\opengl\OpenGLTexture.cpp" />
     <ClCompile Include="src\opengl\OpenGLUIRenderer.cpp" />
+    <ClCompile Include="src\uieditor\UIEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\assets\CPUMesh.h" />
@@ -64,6 +65,7 @@
     <ClInclude Include="src\opengl\OpenGLShaderProgram.h" />
     <ClInclude Include="src\opengl\OpenGLTexture.h" />
     <ClInclude Include="src\opengl\OpenGLUIRenderer.h" />
+    <ClInclude Include="src\uieditor\UIEditor.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\fragment.txt" />

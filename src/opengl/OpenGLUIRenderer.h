@@ -17,6 +17,7 @@ public:
     void render(const UICanvas& canvas);
     void onResize(unsigned int width, unsigned int height);
     void shutdown();
+    static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
 private:
     void uploadAndDraw(const UIQuadBatch&);
