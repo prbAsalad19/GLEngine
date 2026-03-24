@@ -95,11 +95,12 @@ void OpenGLUIRenderer::render(const UICanvas& canvas)
         UIQuadBatch textBatch;
         for (const UIElement& el : canvas.getElements())
         {
-            if (el.type == UIElementType::Label)
+            if (el.type == UIElementType::Label || el.type == UIElementType::Button)
             {
                 std::string displayText = canvas.getString(el.id);
                 if (displayText.empty()) displayText = el.text;
-                textBatch.pushLabel(el, m_fontAtlas, displayText);
+                if (!displayText.empty())
+                    textBatch.pushLabel(el, m_fontAtlas, displayText);
             }
         }
         if (!textBatch.getVertices().empty())

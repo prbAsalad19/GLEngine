@@ -26,6 +26,7 @@ public:
     float       getValue(const std::string& elementId) const;
     std::string getString(const std::string& elementId) const;
     const std::vector<UIElement>& getElements() const { return elements; }
+    std::vector<UIElement>& getElementsMutable() { return elements; }
     bool hasClickableButtons() { return hasButtons; }
     void processClickAt(double xpos, double ypos);
 

@@ -95,23 +95,29 @@ void UIQuadBatch::pushLabel(const UIElement& element,
     const FontAtlas& atlas,
     const std::string& resolvedText)
 {
-    //std::cout << "[pushLabel] text='" << resolvedText
-    //    << "' pos=" << element.geometry.simple.position.x
-    //    << "," << element.geometry.simple.position.y << "\n";
     if (resolvedText.empty()) return;
 
-    float cursorX = element.geometry.simple.position.x;
-    float cursorY = element.geometry.simple.position.y;
+    float boxX = element.geometry.simple.position.x;
+    float boxY = element.geometry.simple.position.y;
+    float boxW = element.geometry.simple.size.x;
+    float boxH = element.geometry.simple.size.y;
 
-    // baseline = top of the label box + ascent approximated as pixelHeight * 0.8
-    // stb_truetype bearingY is already relative to baseline.
-    float baseline = cursorY + atlas.getPixelHeight() * 0.8f;
+    // Centra orizzontalmente se è un bottone, allinea a sinistra altrimenti
+    float textWidth = atlas.measureText(resolvedText);
+    float cursorX = (element.type == UIElementType::Button)
+        ? boxX + (boxW - textWidth) * 0.5f
+        : boxX;
+
+    // Centra verticalmente se è un bottone
+    float baseline = (element.type == UIElementType::Button)
+        ? boxY + (boxH + atlas.getPixelHeight() * 0.5f) * 0.5f
+        : boxY + atlas.getPixelHeight() * 0.8f;
 
     for (char c : resolvedText)
     {
         if (c == '\n')
         {
-            cursorX = element.geometry.simple.position.x;
+            cursorX = boxX;
             baseline += atlas.getLineHeight();
             continue;
         }
@@ -123,15 +129,13 @@ void UIQuadBatch::pushLabel(const UIElement& element,
             continue;
         }
 
-        // Pixel-space quad corners
         float x0 = cursorX + g.bearingX;
-        float y0 = baseline + g.bearingY;          // bearingY is negative above baseline
+        float y0 = baseline + g.bearingY;
         float x1 = x0 + g.width;
         float y1 = y0 + g.height;
 
         unsigned int baseIndex = static_cast<unsigned int>(vertices.size());
 
-        // 4 vertices — color carries the text tint (RGBA)
         auto makeVert = [&](float px, float py, float u, float v) -> UIVertex
             {
                 UIVertex vert;
@@ -144,10 +148,10 @@ void UIQuadBatch::pushLabel(const UIElement& element,
                 return vert;
             };
 
-        vertices.push_back(makeVert(x0, y0, g.uvX0, g.uvY0));  // top-left
-        vertices.push_back(makeVert(x1, y0, g.uvX1, g.uvY0));  // top-right
-        vertices.push_back(makeVert(x1, y1, g.uvX1, g.uvY1));  // bottom-right
-        vertices.push_back(makeVert(x0, y1, g.uvX0, g.uvY1));  // bottom-left
+        vertices.push_back(makeVert(x0, y0, g.uvX0, g.uvY0));
+        vertices.push_back(makeVert(x1, y0, g.uvX1, g.uvY0));
+        vertices.push_back(makeVert(x1, y1, g.uvX1, g.uvY1));
+        vertices.push_back(makeVert(x0, y1, g.uvX0, g.uvY1));
 
         indices.push_back(baseIndex + 0);
         indices.push_back(baseIndex + 1);

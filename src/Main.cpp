@@ -35,7 +35,8 @@ int main()
     if (activeEditor)
     {
         UIEditor editor;
-        editor.init();
+        editor.init("assets/exported.json");
+        return 0;
     }
 
     constexpr float FIXED_STEP = 1.0f / 50.0f;

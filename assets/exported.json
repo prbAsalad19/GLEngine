@@ -1,0 +1,13 @@
+{
+    "elements": [
+        {
+            "id": "test_1",
+            "type": "panel",
+            "color": "#FFFFFF",
+            "geometry": {
+                "position": [50, 50],
+                "size": [300, 80]
+            }
+        }
+    ]
+}
