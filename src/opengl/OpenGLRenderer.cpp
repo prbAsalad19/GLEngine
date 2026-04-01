@@ -27,6 +27,7 @@ void OpenGLRenderer::init()
     glDepthFunc(GL_LESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glEnable(GL_DEBUG_OUTPUT);
 
 	//-- UBO setup ────────────────────────────────────────────────────────────────────────────────────────────────
 	glCreateBuffers(1, &m_cameraUBO);

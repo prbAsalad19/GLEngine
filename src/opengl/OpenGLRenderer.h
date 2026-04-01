@@ -3,7 +3,7 @@
 #include "opengl/OpenGLShaderProgram.h"
 #include "core/resourcemanager/ResourceManager.h"
 #include "core/scene/Scene.h"
-#include "core/scene/Camera.h"
+#include "core/assets/Camera.h"
 #include "core/scene/RenderCommand.h"
 
 static constexpr uint32_t MAX_RENDER_OBJECTS = 1024;

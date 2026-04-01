@@ -1,7 +1,7 @@
 #include "core/CoreConfig.h"
 #include "core/math/algebricOp.h"
 #include "core/scene/Scene.h"
-#include "core/scene/Camera.h"
+#include "core/assets/Camera.h"
 #include "core/resourcemanager/ResourceManager.h"
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLUIRenderer.h"
@@ -45,7 +45,7 @@ int main()
     ResourceManager resources;
 
     MeshHandle     meshHandle = resources.loadMesh("assets/teapot_with_uv.obj");
-    TextureHandle  texHandle = resources.loadTexture("C:/Users/simon/vs_projects/GLEngine/img/whiteTexture.png");
+    TextureHandle  texHandle = resources.loadTexture("img/whiteTexture.png");
     MaterialHandle matHandle = resources.loadMaterial(texHandle);
 
     Scene scene;
@@ -81,8 +81,8 @@ int main()
 
     Camera camera;
     camera.position = { -5.0f, 0.0f, 3.0f };
-    camera.setTarget({ 0.0f, 0.0f, 0.0f });
-    camera.fov = 45.0f;
+    camera.target =  { 0.0f, 0.0f, 0.0f };
+    camera.fovDegrees = 45.0f;
     camera.nearPlane = 0.1f;
     camera.farPlane = 1000.0f;
 
@@ -137,7 +137,7 @@ int main()
 
         accumulator += dt;
 
-        // FixedUpdate — timestep fisso, gira N volte se necessario
+        // FixedUpdate ï¿½ timestep fisso, gira N volte se necessario
         while (accumulator >= FIXED_STEP)
         {
             // fisica, collisioni, logica deterministica
@@ -195,6 +195,8 @@ static GLFWwindow* createWindow(int width, int height, const char* title)
     }
 
     glfwMakeContextCurrent(window);
+
+    glfwSwapInterval(0);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
