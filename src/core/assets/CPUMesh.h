@@ -1,5 +1,6 @@
 #pragma once
 #include "core/CoreConfig.h"
+#include "core/bvh/aabb.h"
 
 class CPUMesh
 {
@@ -9,6 +10,7 @@ public:
     const std::vector<float>& getTextureCoord() const { return textureCoord; }
     const std::vector<float>& getNormals()      const { return normals; }
     const std::vector<unsigned int>& getFaces()        const { return faces; }
+    const AABB& getAABB() const { return aabb; }
 
     // 0 = v only | 1 = v/vt | 2 = v//vn | 3 = v/vt/vn
     int getMeshType() const
@@ -19,7 +21,13 @@ public:
         return type;
     }
 
-    void addVertex(float x, float y, float z) { vertices.push_back(x); vertices.push_back(y); vertices.push_back(z); }
+    void addVertex(float x, float y, float z) 
+    {
+        aabb.expand({x, y, z });
+        vertices.push_back(x); 
+        vertices.push_back(y); 
+        vertices.push_back(z); 
+    }
     void addTextureCoord(float u, float v) { textureCoord.push_back(u); textureCoord.push_back(v); }
     void addNormal(float x, float y, float z) { normals.push_back(x); normals.push_back(y); normals.push_back(z); }
     void addFaceValue(int val) { faces.push_back(val); }
@@ -31,4 +39,5 @@ private:
     std::vector<float> textureCoord;
     std::vector<float> normals;
     std::vector<unsigned int>   faces;
+    AABB aabb;
 };

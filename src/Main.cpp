@@ -6,7 +6,7 @@
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLUIRenderer.h"
 #include "core/ui/UICanvas.h"
-
+#include "core/bvh/BVHTree.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -125,6 +125,27 @@ int main()
     //printMat("model", scene.objects[0].transform.getMatrix());
     //debug ------------------------------------------------------------------------------
 
+    // test bvh
+    BVHTree bvh(resources);
+    bvh.build(scene.objects);
+
+    const auto& nodes = bvh.getNodes();
+    std::cout << "total BVH nodes: " << nodes.size() << "\n";
+    std::cout << "indices: " << bvh.getIndices().size() << "\n";
+
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        const auto& n = nodes[i];
+        if (n.isLeaf())
+        {
+            std::cout << "Node " << i << " is a leaf. Objects: " << n.objectCount << "\n";
+        }
+        else
+        {
+            std::cout << "Node " << i << " is an internal node. Left child index: " << n.leftChild << "\n";
+        }
+    }
+    //==============================================================================
 
     while (!glfwWindowShouldClose(window))
     {

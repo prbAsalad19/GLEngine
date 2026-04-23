@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <algorithm>
 #include <cstring>
 
 #define PI 3.14159265358979323846f
@@ -24,6 +25,9 @@ public:
     static float   dot(Vector3 u, Vector3 v);
     static Vector3 normalize(Vector3 v);
     static Vector3 cross(Vector3 u, Vector3 v);
+    static Vector3 midpoint(Vector3 u, Vector3 v);
+    static Vector3 Vmin(Vector3 u, Vector3 v);
+    static Vector3 Vmax(Vector3 u, Vector3 v);
     void           normalize();
 };
 

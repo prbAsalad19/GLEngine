@@ -1,0 +1,20 @@
+markdown_extensions:
+- tables
+- admonition
+- pymdownx.details
+- pymdownx.superfences
+- pymdownx.highlight
+- pymdownx.inlinehilite
+site_name: GLEngine API Docs
+theme:
+  features:
+  - navigation.sections
+  - navigation.expand
+  - navigation.indexes
+  - search.highlight
+  - search.share
+  - content.code.copy
+  name: material
+  palette:
+    primary: indigo
+    scheme: slate

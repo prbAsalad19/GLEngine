@@ -1,0 +1,157 @@
+#include "BVHTree.h"
+#include "core/bvh/aabb.h"
+#include "core/resourcemanager/ResourceManager.h"
+#include <cstdint>
+#include <strings.h>
+
+AABB BVHTree::computeAABB(uint32_t first, 
+        uint32_t count, 
+        const std::vector<RenderObject>& objects)
+{
+    AABB result;
+    for (uint32_t i = 0; i < count; i++)
+    {
+        AABB objAABB = m_resources.getMeshAABB(objects[first + i].mesh);
+        result = AABB::merge(result, objAABB);
+    }
+    return result;
+}
+
+void BVHTree::buildRecursive(uint32_t nodeIndex, 
+        uint32_t first, 
+        uint32_t count, 
+        const std::vector<RenderObject>& objects)
+{
+    m_nodes[nodeIndex].aabb = computeAABB(first, count, objects);
+
+    if (count <= 2)
+    {
+        m_nodes[nodeIndex].leftChild = -1;
+        m_nodes[nodeIndex].firstObject =  first;
+        m_nodes[nodeIndex].objectCount = count;
+        return;
+    }
+
+    // to be changed when implementing the SAH, for now we just split on the longest axis
+    int   axis;
+    float splitPos;
+    chooseSplitSAH(first, count, objects, m_nodes[nodeIndex].aabb, axis, splitPos);
+    //===================================================================================
+
+    auto mid = std::partition(
+        m_indices.begin() + first,
+        m_indices.begin() + first + count,
+        [&](uint32_t i) {
+            return m_resources.getMeshAABB(objects[i].mesh).center().entries[axis] < splitPos;
+        }
+    );
+
+    uint32_t midIdx = static_cast<uint32_t>(mid - m_indices.begin());
+    if (midIdx == first || midIdx == first + count)
+        midIdx = first + count / 2;
+
+    uint32_t leftIdx = static_cast<uint32_t>(m_nodes.size());
+    m_nodes.push_back({});
+    m_nodes.push_back({});
+    m_nodes[nodeIndex].leftChild = static_cast<int32_t>(leftIdx);
+
+    buildRecursive(leftIdx,     first,   midIdx - first,              objects);
+    buildRecursive(leftIdx + 1, midIdx,  (first + count) - midIdx,    objects);
+}
+
+void BVHTree::build(const std::vector<RenderObject>& objects)
+{
+    m_nodes.clear();
+    m_indices.clear();
+
+    if (objects.empty()) return;
+
+    m_indices.resize(objects.size());
+    for (uint32_t i = 0; i < objects.size(); i++)
+        m_indices[i] = i;
+
+    m_nodes.push_back({});
+    
+    buildRecursive(0, 0, static_cast<uint32_t>(objects.size()), objects);
+}
+
+void BVHTree::chooseSplitSAH(uint32_t first,
+                              uint32_t count,
+                              const std::vector<RenderObject>& objects,
+                              const AABB& nodeAABB,
+                              int& outAxis,
+                              float& outSplitPos)
+{
+    constexpr int NUM_BUCKETS = 8;
+
+    struct Bucket
+    {
+        AABB  aabb;
+        int   count = 0;
+    };
+
+    float bestCost     = std::numeric_limits<float>::max();
+    int   bestAxis     = 0;
+    float bestSplitPos = 0.0f;
+
+    for (int axis = 0; axis < 3; axis++)
+    {
+        float axisMin = nodeAABB.bounds[0].entries[axis];
+        float axisMax = nodeAABB.bounds[1].entries[axis];
+        float extent  = axisMax - axisMin;
+
+        if (extent < 1e-6f) continue; // asse piatto, salta
+
+        // --- popola i bucket ---
+        Bucket buckets[NUM_BUCKETS];
+
+        for (uint32_t i = first; i < first + count; i++)
+        {
+            AABB objAABB = m_resources.getMeshAABB(objects[m_indices[i]].mesh);
+            float center = objAABB.center().entries[axis];
+
+            int b = static_cast<int>(NUM_BUCKETS * (center - axisMin) / extent);
+            b = std::clamp(b, 0, NUM_BUCKETS - 1);
+
+            buckets[b].aabb  = (buckets[b].count == 0) 
+                               ? objAABB 
+                               : AABB::merge(buckets[b].aabb, objAABB);
+            buckets[b].count++;
+        }
+
+        // --- valuta ogni piano di split ---
+        for (int i = 1; i < NUM_BUCKETS; i++)
+        {
+            AABB  leftAABB;  int leftCount  = 0;
+            AABB  rightAABB; int rightCount = 0;
+
+            for (int j = 0;          j < i;           j++)
+            {
+                if (buckets[j].count == 0) continue;
+                leftAABB  = (leftCount  == 0) ? buckets[j].aabb : AABB::merge(leftAABB,  buckets[j].aabb);
+                leftCount += buckets[j].count;
+            }
+            for (int j = i; j < NUM_BUCKETS; j++)
+            {
+                if (buckets[j].count == 0) continue;
+                rightAABB  = (rightCount == 0) ? buckets[j].aabb : AABB::merge(rightAABB, buckets[j].aabb);
+                rightCount += buckets[j].count;
+            }
+
+            if (leftCount == 0 || rightCount == 0) continue;
+
+            float cost = leftAABB.surfaceArea()  * leftCount
+                       + rightAABB.surfaceArea() * rightCount;
+
+            if (cost < bestCost)
+            {
+                bestCost     = cost;
+                bestAxis     = axis;
+                bestSplitPos = axisMin + extent * (i / static_cast<float>(NUM_BUCKETS));
+            }
+        }
+    }
+
+    outAxis     = bestAxis;
+    outSplitPos = bestSplitPos;
+}

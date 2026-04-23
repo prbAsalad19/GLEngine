@@ -190,6 +190,33 @@ Vector3 Vector3::cross(Vector3 u, Vector3 v)
     };
 }
 
+Vector3 Vector3::midpoint(Vector3 u, Vector3 v)
+{
+    return{
+        (u.entries[0] + v.entries[0]) / 2,
+        (u.entries[1] + v.entries[1]) / 2,
+        (u.entries[2] + v.entries[2]) / 2
+    };
+}
+
+Vector3 Vector3::Vmin(Vector3 u, Vector3 v)
+{
+    return {
+        std::min(u.entries[0], v.entries[0]),
+        std::min(u.entries[1], v.entries[1]),
+        std::min(u.entries[2], v.entries[2]),
+    };
+}
+
+Vector3 Vector3::Vmax(Vector3 u, Vector3 v)
+{
+        return {
+        std::max(u.entries[0], v.entries[0]),
+        std::max(u.entries[1], v.entries[1]),
+        std::max(u.entries[2], v.entries[2]),
+    };
+}
+
 // ─────────────────────────────────────────────
 //  Vector2
 // ─────────────────────────────────────────────

@@ -1,4 +1,5 @@
 #include "ResourceManager.h"
+#include "core/resourcemanager/ResourceHandle.h"
 
 const MeshHandle ResourceManager::loadMesh(const std::string& path)
 {
@@ -7,7 +8,7 @@ const MeshHandle ResourceManager::loadMesh(const std::string& path)
 
 	std::vector<unsigned int> indices;
 	auto vertices = MeshLoader::toVertexArray(cpu, indices);
-	auto mesh = std::make_unique<OpenGLMesh>(vertices, indices);
+	auto mesh = std::make_unique<OpenGLMesh>(vertices, indices, cpu.getAABB());
 
 	return meshPool.insert(path, std::move(mesh));
 }
@@ -15,6 +16,11 @@ const MeshHandle ResourceManager::loadMesh(const std::string& path)
 OpenGLMesh* ResourceManager::getMesh(MeshHandle handle)
 {
 	return meshPool.get(handle);
+}
+
+AABB ResourceManager::getMeshAABB(MeshHandle handle)
+{
+	return meshPool.get(handle)->aabb;
 }
 
 void ResourceManager::deleteMesh(MeshHandle handle)
