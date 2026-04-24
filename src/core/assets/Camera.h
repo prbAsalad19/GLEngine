@@ -22,6 +22,8 @@ public:
     float nearPlane;
     float farPlane;
 
+    float rollDegrees;
+    
     Camera();
     Camera(Vector3 position, Vector3 target, float fovDegrees, float nearPlane, float farPlane);
 

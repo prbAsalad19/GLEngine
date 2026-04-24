@@ -217,6 +217,24 @@ Vector3 Vector3::Vmax(Vector3 u, Vector3 v)
     };
 }
 
+Vector3 Vector3::targetFromEuler(const EulerAngles& e)
+{
+    float cp = cosf(e.pitch * PI / 180.0f);
+    float sp = sinf(e.pitch * PI / 180.0f);
+    float cy = cosf(e.yaw   * PI / 180.0f);
+    float sy = sinf(e.yaw   * PI / 180.0f);
+    return { cy*cp, sy*cp, sp };
+}
+
+Vector3 Vector3::targetFromQuaternion(const Quaternion& q)
+{
+    return {
+        2.0f * (q.x*q.z + q.w*q.y),
+        2.0f * (q.y*q.z - q.w*q.x),
+        1.0f - 2.0f * (q.x*q.x + q.y*q.y)
+    };
+}
+
 // ─────────────────────────────────────────────
 //  Vector2
 // ─────────────────────────────────────────────

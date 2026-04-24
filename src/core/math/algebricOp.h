@@ -8,6 +8,8 @@
 // ─────────────────────────────────────────────
 //  Vector3
 // ─────────────────────────────────────────────
+class EulerAngles;
+class Quaternion;
 
 class Vector3
 {
@@ -28,6 +30,8 @@ public:
     static Vector3 midpoint(Vector3 u, Vector3 v);
     static Vector3 Vmin(Vector3 u, Vector3 v);
     static Vector3 Vmax(Vector3 u, Vector3 v);
+    static Vector3 targetFromEuler(const EulerAngles& e);
+    static Vector3 targetFromQuaternion(const Quaternion& q);
     void           normalize();
 };
 
