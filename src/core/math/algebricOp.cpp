@@ -132,6 +132,95 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
 }
 
 // ─────────────────────────────────────────────
+//  Vector4
+// ─────────────────────────────────────────────
+
+Vector4 Vector4::operator+(const Vector4& other) const
+{
+    return {
+        entries[0] + other.entries[0],
+        entries[1] + other.entries[1],
+        entries[2] + other.entries[2],
+        entries[3] + other.entries[3]
+    };
+}
+
+Vector4 Vector4::operator-(const Vector4& other) const
+{
+    return {
+        entries[0] - other.entries[0],
+        entries[1] - other.entries[1],
+        entries[2] - other.entries[2],
+        entries[3] - other.entries[3]
+    };
+}
+
+Vector4 Vector4::operator*(float scalar) const
+{
+    return {
+        entries[0] * scalar,
+        entries[1] * scalar,
+        entries[2] * scalar,
+        entries[3] * scalar
+    };
+}
+
+float Vector4::dot(Vector4 u, Vector4 v)
+{
+    return u.entries[0] * v.entries[0]
+         + u.entries[1] * v.entries[1]
+         + u.entries[2] * v.entries[2]
+         + u.entries[3] * v.entries[3];
+}
+
+void Vector4::normalize()
+{
+    float mag = sqrtf(entries[0]*entries[0] + entries[1]*entries[1] + entries[2]*entries[2] + entries[3]*entries[3]);
+    if (mag > 0.0f) {
+        entries[0] /= mag;
+        entries[1] /= mag;
+        entries[2] /= mag;
+        entries[3] /= mag;
+    }
+}
+
+Vector4 Vector4::normalize(Vector4 v)
+{
+    v.normalize();
+    return v;
+}
+
+Vector4 Vector4::midpoint(Vector4 u, Vector4 v)
+{
+    return{
+        (u.entries[0] + v.entries[0]) / 2.0f,
+        (u.entries[1] + v.entries[1]) / 2.0f,
+        (u.entries[2] + v.entries[2]) / 2.0f,
+        (u.entries[3] + v.entries[3]) / 2.0f
+    };
+}
+
+Vector4 Vector4::Vmin(Vector4 u, Vector4 v)
+{
+    return {
+        std::min(u.entries[0], v.entries[0]),
+        std::min(u.entries[1], v.entries[1]),
+        std::min(u.entries[2], v.entries[2]),
+        std::min(u.entries[3], v.entries[3]),
+    };
+}
+
+Vector4 Vector4::Vmax(Vector4 u, Vector4 v)
+{
+        return {
+        std::max(u.entries[0], v.entries[0]),
+        std::max(u.entries[1], v.entries[1]),
+        std::max(u.entries[2], v.entries[2]),
+        std::max(u.entries[3], v.entries[3]),
+    };
+}
+
+// ─────────────────────────────────────────────
 //  Vector3
 // ─────────────────────────────────────────────
 
@@ -193,9 +282,9 @@ Vector3 Vector3::cross(Vector3 u, Vector3 v)
 Vector3 Vector3::midpoint(Vector3 u, Vector3 v)
 {
     return{
-        (u.entries[0] + v.entries[0]) / 2,
-        (u.entries[1] + v.entries[1]) / 2,
-        (u.entries[2] + v.entries[2]) / 2
+        (u.entries[0] + v.entries[0]) / 2.0f,
+        (u.entries[1] + v.entries[1]) / 2.0f,
+        (u.entries[2] + v.entries[2]) / 2.0f
     };
 }
 

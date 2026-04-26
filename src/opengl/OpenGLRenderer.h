@@ -5,6 +5,7 @@
 #include "core/scene/Scene.h"
 #include "core/assets/Camera.h"
 #include "core/scene/RenderCommand.h"
+#include "core/bvh/BVHTree.h"
 
 static constexpr uint32_t MAX_RENDER_OBJECTS = 1024;
 static constexpr GLuint CAMERA_UBO_BINDING = 0;
@@ -30,7 +31,9 @@ public:
     void init();
     void shutdown();
     void onResize(unsigned int width, unsigned int height);
-    void render(const Scene& scene, const Camera& camera);
+    void render(const Scene& scene, 
+                            const Camera& camera,
+                            const BVHTree& bvh);
 
 private:
     ResourceManager& m_resources;

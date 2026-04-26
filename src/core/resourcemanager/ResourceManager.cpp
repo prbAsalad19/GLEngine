@@ -6,9 +6,30 @@ const MeshHandle ResourceManager::loadMesh(const std::string& path)
 	CPUMesh cpu;
 	if (!MeshLoader::loadOBJ(path, cpu)) return MeshHandle{};
 
+	    // debug
+    // std::cout << "CPUMesh AABB min: " 
+    //           << cpu.getAABB().bounds[0].x << " "
+    //           << cpu.getAABB().bounds[0].y << " "
+    //           << cpu.getAABB().bounds[0].z << "\n";
+    // std::cout << "CPUMesh AABB max: "
+    //           << cpu.getAABB().bounds[1].x << " "
+    //           << cpu.getAABB().bounds[1].y << " "
+    //           << cpu.getAABB().bounds[1].z << "\n";
+
 	std::vector<unsigned int> indices;
 	auto vertices = MeshLoader::toVertexArray(cpu, indices);
 	auto mesh = std::make_unique<OpenGLMesh>(vertices, indices, cpu.getAABB());
+
+
+    // debug
+    // std::cout << "OpenGLMesh AABB min: "
+    //           << mesh->aabb.bounds[0].x << " "
+    //           << mesh->aabb.bounds[0].y << " "
+    //           << mesh->aabb.bounds[0].z << "\n";
+    // std::cout << "OpenGLMesh AABB max: "
+    //           << mesh->aabb.bounds[1].x << " "
+    //           << mesh->aabb.bounds[1].y << " "
+    //           << mesh->aabb.bounds[1].z << "\n";
 
 	return meshPool.insert(path, std::move(mesh));
 }

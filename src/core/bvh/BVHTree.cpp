@@ -4,15 +4,29 @@
 #include <cstdint>
 #include <strings.h>
 
-AABB BVHTree::computeAABB(uint32_t first, 
-        uint32_t count, 
+// AABB BVHTree::computeAABB(uint32_t first, 
+//         uint32_t count, 
+//         const std::vector<RenderObject>& objects)
+// {
+//     AABB result;
+//     for (uint32_t i = 0; i < count; i++)
+//     {
+//         AABB objAABB = m_resources.getMeshAABB(objects[first + i].mesh);
+//         result = AABB::merge(result, objAABB);
+//     }
+//     return result;
+// }
+AABB BVHTree::computeAABB(uint32_t first,
+        uint32_t count,
         const std::vector<RenderObject>& objects)
 {
     AABB result;
     for (uint32_t i = 0; i < count; i++)
     {
-        AABB objAABB = m_resources.getMeshAABB(objects[first + i].mesh);
-        result = AABB::merge(result, objAABB);
+        AABB meshAABB = m_resources.getMeshAABB(objects[m_indices[first + i]].mesh);
+        mat4 model    = objects[m_indices[first + i]].transform.getMatrix();
+        AABB worldAABB = AABB::transform(meshAABB, model);
+        result = AABB::merge(result, worldAABB);
     }
     return result;
 }
@@ -73,6 +87,38 @@ void BVHTree::build(const std::vector<RenderObject>& objects)
     m_nodes.push_back({});
     
     buildRecursive(0, 0, static_cast<uint32_t>(objects.size()), objects);
+}
+
+void BVHTree::query(const Frustum& frustum,
+                    const std::vector<RenderObject>& objects,
+                    std::vector<uint32_t>& outVisible) const
+{
+    if (m_nodes.empty()) return;
+    queryRecursive(0, frustum, objects, outVisible);
+}
+
+void BVHTree::queryRecursive(uint32_t nodeIndex,
+                              const Frustum& frustum,
+                              const std::vector<RenderObject>& objects,
+                              std::vector<uint32_t>& outVisible) const
+{
+    const BVHNode& node = m_nodes[nodeIndex];
+
+    // testa l'AABB del nodo contro il frustum
+    if (!frustum.intersectsAABB(node.aabb))
+        return; // tutto il sottoalbero è fuori, scarta
+
+    if (node.isLeaf())
+    {
+        // aggiungi gli oggetti di questa foglia alla lista visibile
+        for (uint32_t i = 0; i < node.objectCount; i++)
+            outVisible.push_back(m_indices[node.firstObject + i]);
+        return;
+    }
+
+    // nodo interno — traversa i figli
+    queryRecursive(node.leftChild,     frustum, objects, outVisible);
+    queryRecursive(node.leftChild + 1, frustum, objects, outVisible);
 }
 
 void BVHTree::chooseSplitSAH(uint32_t first,

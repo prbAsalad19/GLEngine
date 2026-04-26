@@ -62,10 +62,44 @@ void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
     glViewport(0, 0, width, height);
 }
 
-void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
+void OpenGLRenderer::render(const Scene& scene, 
+                            const Camera& camera,
+                            const BVHTree& bvh)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if (scene.objects.empty()) return;
+
+    // estrai frustum
+    mat4 view       = camera.getViewMatrix();
+    mat4 projection = camera.getProjectionMatrix(
+        static_cast<float>(m_width) / static_cast<float>(m_height));
+    mat4 vp = projection * view;
+
+    Frustum frustum;
+    frustum.extractFromMatrix(vp);
+
+    // query BVH
+    std::vector<uint32_t> visibleIndices;
+    visibleIndices.reserve(scene.objects.size());
+    bvh.query(frustum, scene.objects, visibleIndices);
+
+    // const auto& rootNode = bvh.getNodes()[0];
+    // std::cout << "=== ROOT AABB ===\n";
+    // std::cout << "min: " << rootNode.aabb.bounds[0].x << " " 
+    //         << rootNode.aabb.bounds[0].y << " " 
+    //         << rootNode.aabb.bounds[0].z << "\n";
+    // std::cout << "max: " << rootNode.aabb.bounds[1].x << " " 
+    //         << rootNode.aabb.bounds[1].y << " " 
+    //         << rootNode.aabb.bounds[1].z << "\n";
+
+    std::cout << "visibili: " << visibleIndices.size() 
+          << " / " << scene.objects.size() << "\n";
+
+    if (visibleIndices.empty()) 
+    {
+        m_shader.unbind();
+        return;
+    }
 
     // Raggruppa per mesh — stessa mesh = stessa draw call
     // key:   MeshHandle
@@ -73,10 +107,10 @@ void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
     std::unordered_map<MeshHandle, std::vector<std::pair<uint32_t, MaterialHandle>>> groups;
 
     uint32_t index = 0;
-    for (const RenderObject& obj : scene.objects)
+    for (uint32_t objIdx : visibleIndices)
     {
         if (index >= MAX_RENDER_OBJECTS) break;
-
+        const RenderObject& obj = scene.objects[objIdx];
         m_transformStagingBuffer[index] = obj.transform.getMatrix();
         groups[obj.mesh].push_back({ index, obj.material });
         ++index;
@@ -89,10 +123,6 @@ void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
 
     // Upload camera UBO — invariato rispetto a prima
     CameraUBOData cameraData;
-    mat4 view = camera.getViewMatrix();
-    mat4 projection = camera.getProjectionMatrix(
-        static_cast<float>(m_width) / static_cast<float>(m_height));
-    mat4 vp = projection * view;
     memcpy(cameraData.view, view.entries, sizeof(float) * 16);
     memcpy(cameraData.projection, projection.entries, sizeof(float) * 16);
     memcpy(cameraData.viewProjection, vp.entries, sizeof(float) * 16);

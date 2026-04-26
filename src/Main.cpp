@@ -132,9 +132,18 @@ int main()
     //printMat("model", scene.objects[0].transform.getMatrix());
     //debug ------------------------------------------------------------------------------
 
-    // test bvh
-    // BVHTree bvh(resources);
-    // bvh.build(scene.objects);
+    // in main, prima di bvh.build()
+for (int i = 0; i < scene.objects.size(); i++)
+{
+    AABB aabb = resources.getMeshAABB(scene.objects[i].mesh);
+    std::cout << "oggetto " << i << " aabb min: " 
+              << aabb.bounds[0].x << " " << aabb.bounds[0].y << " " << aabb.bounds[0].z
+              << " max: "
+              << aabb.bounds[1].x << " " << aabb.bounds[1].y << " " << aabb.bounds[1].z << "\n";
+}
+    // build bvh
+    BVHTree bvh(resources);
+    bvh.build(scene.objects);
 
     // const auto& nodes = bvh.getNodes();
     // std::cout << "total BVH nodes: " << nodes.size() << "\n";
@@ -242,7 +251,8 @@ int main()
         }
         //=================================================================================
 
-        renderer.render(scene, camera);
+        bvh.build(scene.objects);
+        renderer.render(scene, camera, bvh);
         UIrenderer.render(canvas);
         glfwSwapBuffers(window);
     }

@@ -4,6 +4,7 @@
 #include "core/bvh/aabb.h"
 #include "core/resourcemanager/ResourceManager.h"
 #include "core/scene/RenderObject.h"
+#include "core/scene/Frustum.h"
 #include <cstdint>
 #include <vector>
 
@@ -16,6 +17,15 @@ public:
 
     const std::vector<BVHNode>& getNodes() const { return m_nodes; }
     const std::vector<uint32_t>& getIndices() const { return m_indices; }
+
+    void query(const Frustum& frustum,
+                    const std::vector<RenderObject>& objects,
+                    std::vector<uint32_t>& outVisible) const;
+    
+    void queryRecursive(uint32_t nodeIndex,
+                                const Frustum& frustum,
+                                const std::vector<RenderObject>& objects,
+                                std::vector<uint32_t>& outVisible) const;
 
 private:
     std::vector<BVHNode> m_nodes;

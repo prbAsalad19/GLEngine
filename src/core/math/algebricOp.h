@@ -5,11 +5,37 @@
 
 #define PI 3.14159265358979323846f
 
+class EulerAngles;
+class Quaternion;
+
+// ─────────────────────────────────────────────
+//  Vector4
+// ─────────────────────────────────────────────
+
+class Vector4
+{
+public:
+    union
+    {
+        float entries[4];
+        struct { float x; float y; float z; float w; };
+    };
+
+    Vector4 operator+(const Vector4& other) const;
+    Vector4 operator-(const Vector4& other) const;
+    Vector4 operator*(float scalar) const;
+
+    static float   dot(Vector4 u, Vector4 v);
+    static Vector4 normalize(Vector4 v);
+    void           normalize();
+    static Vector4 midpoint(Vector4 u, Vector4 v);
+    static Vector4 Vmin(Vector4 u, Vector4 v);
+    static Vector4 Vmax(Vector4 u, Vector4 v);
+};
+
 // ─────────────────────────────────────────────
 //  Vector3
 // ─────────────────────────────────────────────
-class EulerAngles;
-class Quaternion;
 
 class Vector3
 {
