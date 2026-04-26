@@ -7,4 +7,5 @@ struct RenderObject
     MeshHandle mesh;
     MaterialHandle material; //-1 for no texture
     Transform transform;
+    bool isStatic = true;
 };

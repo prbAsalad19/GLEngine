@@ -67,6 +67,12 @@ void OpenGLRenderer::render(const Scene& scene,
                             const BVHTree& bvh)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // ripristina sempre lo stato 3D
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+
     if (scene.objects.empty()) return;
 
     // estrai frustum
@@ -95,12 +101,6 @@ void OpenGLRenderer::render(const Scene& scene,
     std::cout << "visibili: " << visibleIndices.size() 
           << " / " << scene.objects.size() << "\n";
 
-    if (visibleIndices.empty()) 
-    {
-        m_shader.unbind();
-        return;
-    }
-
     // Raggruppa per mesh — stessa mesh = stessa draw call
     // key:   MeshHandle
     // value: lista di { transformIndex, materialHandle }
@@ -117,11 +117,14 @@ void OpenGLRenderer::render(const Scene& scene,
     }
 
     // Upload transforms — tutti in un colpo solo
-    glNamedBufferSubData(m_transformUBO, 0,
-        sizeof(mat4) * index,
-        m_transformStagingBuffer);
+    if (index > 0)
+    {
+        glNamedBufferSubData(m_transformUBO, 0,
+            sizeof(mat4) * index,
+            m_transformStagingBuffer);
+    }
 
-    // Upload camera UBO — invariato rispetto a prima
+    // Upload camera UBO
     CameraUBOData cameraData;
     memcpy(cameraData.view, view.entries, sizeof(float) * 16);
     memcpy(cameraData.projection, projection.entries, sizeof(float) * 16);
@@ -132,16 +135,16 @@ void OpenGLRenderer::render(const Scene& scene,
     cameraData._padding = 0.0f;
     glNamedBufferSubData(m_cameraUBO, 0, sizeof(CameraUBOData), &cameraData);
 
+    // bind shader — sempre, anche se groups è vuoto
+    // così lo stato è sempre pulito per l'UI che viene dopo
     m_shader.bind();
 
     for (auto& [meshHandle, instances] : groups)
     {
+        // se visibleIndices era vuoto, groups è vuoto e questo loop non esegue
         OpenGLMesh* mesh = m_resources.getMesh(meshHandle);
         if (!mesh) continue;
 
-        // Per ora usa il materiale della prima istanza del gruppo.
-        // Con materiali diversi sulla stessa mesh servirebbe un'altra
-        // suddivisione — ma è un caso raro e lo gestirai dopo.
         MaterialHandle matHandle = instances[0].second;
         Material* material = m_resources.getMaterial(matHandle);
         if (material)
@@ -154,10 +157,6 @@ void OpenGLRenderer::render(const Scene& scene,
             }
         }
 
-        // I transform di questo gruppo sono contigui nel buffer?
-        // No — potrebbero essere sparsi. Dobbiamo riordinarli.
-        // Copiamo gli indici in un sotto-buffer compatto e aggiorniamo
-        // il UBO con solo quelli di questo gruppo, partendo da offset 0.
         std::vector<mat4> groupTransforms;
         groupTransforms.reserve(instances.size());
         for (auto& [tIdx, _] : instances)
@@ -170,5 +169,6 @@ void OpenGLRenderer::render(const Scene& scene,
         mesh->drawInstanced(static_cast<uint32_t>(instances.size()));
     }
 
+    // unbind sempre — garantisce stato pulito per l'UI
     m_shader.unbind();
 }

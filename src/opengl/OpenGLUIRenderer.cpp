@@ -72,6 +72,7 @@ void OpenGLUIRenderer::render(const UICanvas& canvas)
     m_shader.setVec2("screenSize", { static_cast<float>(m_width), static_cast<float>(m_height) });
 
     // Pass 1: elementi solidi — nessuna texture, uIsText = 0
+    m_shader.setInt("uIsText", 0);
     m_shader.setInt("uTexture", 0);
 
 
