@@ -119,8 +119,8 @@ void OpenGLRenderer::render(const Scene& scene,
     //         << rootNode.aabb.bounds[1].y << " " 
     //         << rootNode.aabb.bounds[1].z << "\n";
 
-    std::cout << "visibili: " << visibleIndices.size() 
-          << " / " << scene.objects.size() << "\n";
+    // std::cout << "visibili: " << visibleIndices.size() 
+    //       << " / " << scene.objects.size() << "\n";
 
     // Raggruppa per mesh — stessa mesh = stessa draw call
     // key:   MeshHandle
