@@ -32,8 +32,14 @@ public:
     void shutdown();
     void onResize(unsigned int width, unsigned int height);
     void render(const Scene& scene, 
+                            const std::vector<RenderObject>& staticObjects,
+                            const std::vector<RenderObject>& quasiStaticObjects,
+                            const std::vector<RenderObject>& dynamicSlowObjects,
                             const Camera& camera,
-                            const BVHTree& bvh);
+                            const BVHTree& staticBVH,
+                            const BVHTree& quasiStaticBVH,
+                            const BVHTree& dynamicBVH,
+                            const std::vector<RenderObject>& dynamicFastObjects);
 
 private:
     ResourceManager& m_resources;

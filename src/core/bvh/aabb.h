@@ -67,4 +67,12 @@ public:
         }
         return result;
     }
+
+    AABB expanded(float amount) const
+    {
+        AABB result;
+        result.bounds[0] = { bounds[0].x - amount, bounds[0].y - amount, bounds[0].z - amount };
+        result.bounds[1] = { bounds[1].x + amount, bounds[1].y + amount, bounds[1].z + amount };
+        return result;
+    }
 };

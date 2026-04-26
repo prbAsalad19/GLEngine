@@ -26,7 +26,16 @@ AABB BVHTree::computeAABB(uint32_t first,
         AABB meshAABB = m_resources.getMeshAABB(objects[m_indices[first + i]].mesh);
         mat4 model    = objects[m_indices[first + i]].transform.getMatrix();
         AABB worldAABB = AABB::transform(meshAABB, model);
-        result = AABB::merge(result, worldAABB);
+
+        if (objects[m_indices[first + i]].tier == ObjectTier::QuasiStatic)
+        {
+            float expansion = worldAABB.surfaceArea() * 0.05f;
+            result = AABB::merge(result, worldAABB.expanded(expansion));
+        }
+        else 
+        {
+            result = AABB::merge(result, worldAABB);
+        }
     }
     return result;
 }
@@ -73,6 +82,19 @@ void BVHTree::buildRecursive(uint32_t nodeIndex,
     buildRecursive(leftIdx + 1, midIdx,  (first + count) - midIdx,    objects);
 }
 
+float BVHTree::computeSAHCost() const
+{
+    float cost = 0.0f;
+    for (const auto& node : m_nodes)
+    {
+        if (node.isLeaf())
+            cost += node.aabb.surfaceArea() * node.objectCount;
+        else
+            cost += node.aabb.surfaceArea();
+    }
+    return cost;
+}
+
 void BVHTree::build(const std::vector<RenderObject>& objects)
 {
     m_nodes.clear();
@@ -87,6 +109,9 @@ void BVHTree::build(const std::vector<RenderObject>& objects)
     m_nodes.push_back({});
     
     buildRecursive(0, 0, static_cast<uint32_t>(objects.size()), objects);
+
+    m_initialCost = computeSAHCost();
+    m_framesSinceRebuild = 0;
 }
 
 void BVHTree::query(const Frustum& frustum,
@@ -200,4 +225,58 @@ void BVHTree::chooseSplitSAH(uint32_t first,
 
     outAxis     = bestAxis;
     outSplitPos = bestSplitPos;
+}
+
+AABB BVHTree::refitRecursive(uint32_t nodeIndex,
+                              const std::vector<RenderObject>& objects)
+{
+    BVHNode& node = m_nodes[nodeIndex];
+
+    if (node.isLeaf())
+    {
+        // ricalcola l'AABB della foglia dagli oggetti reali in world space
+        AABB result;
+        for (uint32_t i = 0; i < node.objectCount; i++)
+        {
+            uint32_t objIdx  = m_indices[node.firstObject + i];
+            AABB meshAABB    = m_resources.getMeshAABB(objects[objIdx].mesh);
+            AABB worldAABB   = AABB::transform(meshAABB, objects[objIdx].transform.getMatrix());
+            result           = AABB::merge(result, worldAABB);
+        }
+        node.aabb = result;
+        return result;
+    }
+
+    // nodo interno — prima refit i figli, poi aggiorna questo nodo
+    AABB left  = refitRecursive(node.leftChild,     objects);
+    AABB right = refitRecursive(node.leftChild + 1, objects);
+
+    node.aabb = AABB::merge(left, right);
+    return node.aabb;
+}
+
+void BVHTree::refit(const std::vector<RenderObject>& objects)
+{
+    if (m_nodes.empty()) return;
+    refitRecursive(0, objects);
+}
+
+void BVHTree::update(const std::vector<RenderObject>& objects)
+{
+    if (m_type == BVHType::Static || m_type == BVHType::QuasiStatic) return;
+
+    m_framesSinceRebuild++;
+
+    bool intervalExpired = m_framesSinceRebuild >= m_rebuildInterval;
+    bool qualityDegraded = computeSAHCost() > m_initialCost * 2.0f;
+
+    if (intervalExpired || qualityDegraded)
+    {
+        build(objects);
+        // build già resetta m_initialCost e m_framesSinceRebuild
+    }
+    else
+    {
+        refit(objects);
+    }
 }

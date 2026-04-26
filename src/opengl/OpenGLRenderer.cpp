@@ -1,5 +1,7 @@
 ﻿#include "OpenGLRenderer.h"
 #include "core/assets/Material.h"
+#include "core/scene/RenderObject.h"
+#include <vector>
 
 
 OpenGLRenderer::OpenGLRenderer(ResourceManager& resources,
@@ -62,9 +64,15 @@ void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
     glViewport(0, 0, width, height);
 }
 
-void OpenGLRenderer::render(const Scene& scene, 
+void OpenGLRenderer::render(const Scene& scene,
+                            const std::vector<RenderObject>& staticObjects,
+                            const std::vector<RenderObject>& quasiStaticObjects,
+                            const std::vector<RenderObject>& dynamicSlowObjects, 
                             const Camera& camera,
-                            const BVHTree& bvh)
+                            const BVHTree& staticBVH,
+                            const BVHTree& quasiStaticBVH,
+                            const BVHTree& dynamicBVH,
+                            const std::vector<RenderObject>& dynamicFastObjects)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -87,7 +95,20 @@ void OpenGLRenderer::render(const Scene& scene,
     // query BVH
     std::vector<uint32_t> visibleIndices;
     visibleIndices.reserve(scene.objects.size());
-    bvh.query(frustum, scene.objects, visibleIndices);
+    
+    staticBVH.query    (frustum, staticObjects,      visibleIndices);
+    quasiStaticBVH.query(frustum, quasiStaticObjects, visibleIndices);
+    dynamicBVH.query   (frustum, dynamicSlowObjects,  visibleIndices);
+
+    for (uint32_t i = 0; i < dynamicFastObjects.size(); i++)
+    {
+        AABB world = AABB::transform(
+            m_resources.getMeshAABB(dynamicFastObjects[i].mesh),
+            dynamicFastObjects[i].transform.getMatrix());
+
+        if (frustum.intersectsAABB(world))
+            visibleIndices.push_back(i);
+    }
 
     // const auto& rootNode = bvh.getNodes()[0];
     // std::cout << "=== ROOT AABB ===\n";

@@ -55,6 +55,12 @@ int main()
     //obj.transform.scale = { 0.5f, 0.5f, 0.5f };
     //scene.objects.push_back(obj);
     // 9 teiere in griglia 3x3
+
+    std::vector<RenderObject> staticObjects;
+    std::vector<RenderObject> quasiStaticObjects;
+    std::vector<RenderObject> dynamicSlowObjects;
+    std::vector<RenderObject> dynamicFastObjects;
+
     for (int i = 0; i < 3; ++i)
     {
         for (int j = 0; j < 3; ++j)
@@ -133,35 +139,36 @@ int main()
     //debug ------------------------------------------------------------------------------
 
     // in main, prima di bvh.build()
-for (int i = 0; i < scene.objects.size(); i++)
-{
-    AABB aabb = resources.getMeshAABB(scene.objects[i].mesh);
-    std::cout << "oggetto " << i << " aabb min: " 
-              << aabb.bounds[0].x << " " << aabb.bounds[0].y << " " << aabb.bounds[0].z
-              << " max: "
-              << aabb.bounds[1].x << " " << aabb.bounds[1].y << " " << aabb.bounds[1].z << "\n";
-}
-    // build bvh
-    BVHTree bvh(resources);
-    bvh.build(scene.objects);
-
-    // const auto& nodes = bvh.getNodes();
-    // std::cout << "total BVH nodes: " << nodes.size() << "\n";
-    // std::cout << "indices: " << bvh.getIndices().size() << "\n";
-
-    // for (int i = 0; i < nodes.size(); i++)
+    // for (int i = 0; i < scene.objects.size(); i++)
     // {
-    //     const auto& n = nodes[i];
-    //     if (n.isLeaf())
-    //     {
-    //         std::cout << "Node " << i << " is a leaf. Objects: " << n.objectCount << "\n";
-    //     }
-    //     else
-    //     {
-    //         std::cout << "Node " << i << " is an internal node. Left child index: " << n.leftChild << "\n";
-    //     }
+    //     AABB aabb = resources.getMeshAABB(scene.objects[i].mesh);
+    //     std::cout << "oggetto " << i << " aabb min: " 
+    //             << aabb.bounds[0].x << " " << aabb.bounds[0].y << " " << aabb.bounds[0].z
+    //             << " max: "
+    //             << aabb.bounds[1].x << " " << aabb.bounds[1].y << " " << aabb.bounds[1].z << "\n";
     // }
-    //==============================================================================
+
+    // build bvh
+    scene.objects[4].tier = ObjectTier::QuasiStatic;
+    for (const auto& obj : scene.objects)
+    {
+        switch (obj.tier)
+        {
+            case ObjectTier::Static:      staticObjects.push_back(obj);      break;
+            case ObjectTier::QuasiStatic: quasiStaticObjects.push_back(obj); break;
+            case ObjectTier::DynamicSlow: dynamicSlowObjects.push_back(obj); break;
+            case ObjectTier::DynamicFast: dynamicFastObjects.push_back(obj); break;
+        }
+    }
+
+    BVHTree staticBVH    (resources, BVHType::Static);
+    BVHTree quasiStaticBVH (resources, BVHType::QuasiStatic);
+    BVHTree dynamicBVH   (resources, BVHType::DynamicSlow);
+
+    staticBVH.build(staticObjects);
+    quasiStaticBVH.build(quasiStaticObjects);
+    dynamicBVH.build(dynamicSlowObjects);
+
 
     while (!glfwWindowShouldClose(window))
     {
@@ -251,8 +258,9 @@ for (int i = 0; i < scene.objects.size(); i++)
         }
         //=================================================================================
 
-        bvh.build(scene.objects);
-        renderer.render(scene, camera, bvh);
+        dynamicBVH.update(dynamicSlowObjects);
+
+        renderer.render(scene, staticObjects, quasiStaticObjects, dynamicSlowObjects, camera, staticBVH, quasiStaticBVH, dynamicBVH, dynamicFastObjects);
         UIrenderer.render(canvas);
         glfwSwapBuffers(window);
     }
