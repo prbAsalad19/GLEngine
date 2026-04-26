@@ -1,5 +1,6 @@
 #pragma once
 #include "core/CoreConfig.h"
+#include "core/resourcemanager/ResourceHandle.h"
 #include "core/scene/Transform.h"
 #include "core/assets/CPUMesh.h"
 #include "core/assets/MeshLoader.h"
@@ -7,6 +8,7 @@
 #include "opengl/OpenGLMesh.h"
 #include "opengl/OpenGLTexture.h"
 #include "ResourcePool.h"
+#include "core/bvh/aabb.h"
 
 class ResourceManager
 {
@@ -17,6 +19,7 @@ class ResourceManager
 public:
 	const MeshHandle loadMesh(const std::string& filepath);
 	OpenGLMesh* getMesh(MeshHandle handle);
+	AABB getMeshAABB(MeshHandle handle);
 	void deleteMesh(MeshHandle handle);
 
 	const TextureHandle loadTexture(const std::string& filepath);

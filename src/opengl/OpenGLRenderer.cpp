@@ -1,5 +1,7 @@
 ﻿#include "OpenGLRenderer.h"
 #include "core/assets/Material.h"
+#include "core/scene/RenderObject.h"
+#include <vector>
 
 
 OpenGLRenderer::OpenGLRenderer(ResourceManager& resources,
@@ -27,6 +29,7 @@ void OpenGLRenderer::init()
     glDepthFunc(GL_LESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glEnable(GL_DEBUG_OUTPUT);
 
 	//-- UBO setup ────────────────────────────────────────────────────────────────────────────────────────────────
 	glCreateBuffers(1, &m_cameraUBO);
@@ -61,10 +64,63 @@ void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
     glViewport(0, 0, width, height);
 }
 
-void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
+void OpenGLRenderer::render(const Scene& scene,
+                            const std::vector<RenderObject>& staticObjects,
+                            const std::vector<RenderObject>& quasiStaticObjects,
+                            const std::vector<RenderObject>& dynamicSlowObjects, 
+                            const Camera& camera,
+                            const BVHTree& staticBVH,
+                            const BVHTree& quasiStaticBVH,
+                            const BVHTree& dynamicBVH,
+                            const std::vector<RenderObject>& dynamicFastObjects)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // ripristina sempre lo stato 3D
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+
     if (scene.objects.empty()) return;
+
+    // estrai frustum
+    mat4 view       = camera.getViewMatrix();
+    mat4 projection = camera.getProjectionMatrix(
+        static_cast<float>(m_width) / static_cast<float>(m_height));
+    mat4 vp = projection * view;
+
+    Frustum frustum;
+    frustum.extractFromMatrix(vp);
+
+    // query BVH
+    std::vector<uint32_t> visibleIndices;
+    visibleIndices.reserve(scene.objects.size());
+    
+    staticBVH.query    (frustum, staticObjects,      visibleIndices);
+    quasiStaticBVH.query(frustum, quasiStaticObjects, visibleIndices);
+    dynamicBVH.query   (frustum, dynamicSlowObjects,  visibleIndices);
+
+    for (uint32_t i = 0; i < dynamicFastObjects.size(); i++)
+    {
+        AABB world = AABB::transform(
+            m_resources.getMeshAABB(dynamicFastObjects[i].mesh),
+            dynamicFastObjects[i].transform.getMatrix());
+
+        if (frustum.intersectsAABB(world))
+            visibleIndices.push_back(i);
+    }
+
+    // const auto& rootNode = bvh.getNodes()[0];
+    // std::cout << "=== ROOT AABB ===\n";
+    // std::cout << "min: " << rootNode.aabb.bounds[0].x << " " 
+    //         << rootNode.aabb.bounds[0].y << " " 
+    //         << rootNode.aabb.bounds[0].z << "\n";
+    // std::cout << "max: " << rootNode.aabb.bounds[1].x << " " 
+    //         << rootNode.aabb.bounds[1].y << " " 
+    //         << rootNode.aabb.bounds[1].z << "\n";
+
+    std::cout << "visibili: " << visibleIndices.size() 
+          << " / " << scene.objects.size() << "\n";
 
     // Raggruppa per mesh — stessa mesh = stessa draw call
     // key:   MeshHandle
@@ -72,26 +128,25 @@ void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
     std::unordered_map<MeshHandle, std::vector<std::pair<uint32_t, MaterialHandle>>> groups;
 
     uint32_t index = 0;
-    for (const RenderObject& obj : scene.objects)
+    for (uint32_t objIdx : visibleIndices)
     {
         if (index >= MAX_RENDER_OBJECTS) break;
-
+        const RenderObject& obj = scene.objects[objIdx];
         m_transformStagingBuffer[index] = obj.transform.getMatrix();
         groups[obj.mesh].push_back({ index, obj.material });
         ++index;
     }
 
     // Upload transforms — tutti in un colpo solo
-    glNamedBufferSubData(m_transformUBO, 0,
-        sizeof(mat4) * index,
-        m_transformStagingBuffer);
+    if (index > 0)
+    {
+        glNamedBufferSubData(m_transformUBO, 0,
+            sizeof(mat4) * index,
+            m_transformStagingBuffer);
+    }
 
-    // Upload camera UBO — invariato rispetto a prima
+    // Upload camera UBO
     CameraUBOData cameraData;
-    mat4 view = camera.getViewMatrix();
-    mat4 projection = camera.getProjectionMatrix(
-        static_cast<float>(m_width) / static_cast<float>(m_height));
-    mat4 vp = projection * view;
     memcpy(cameraData.view, view.entries, sizeof(float) * 16);
     memcpy(cameraData.projection, projection.entries, sizeof(float) * 16);
     memcpy(cameraData.viewProjection, vp.entries, sizeof(float) * 16);
@@ -101,16 +156,16 @@ void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
     cameraData._padding = 0.0f;
     glNamedBufferSubData(m_cameraUBO, 0, sizeof(CameraUBOData), &cameraData);
 
+    // bind shader — sempre, anche se groups è vuoto
+    // così lo stato è sempre pulito per l'UI che viene dopo
     m_shader.bind();
 
     for (auto& [meshHandle, instances] : groups)
     {
+        // se visibleIndices era vuoto, groups è vuoto e questo loop non esegue
         OpenGLMesh* mesh = m_resources.getMesh(meshHandle);
         if (!mesh) continue;
 
-        // Per ora usa il materiale della prima istanza del gruppo.
-        // Con materiali diversi sulla stessa mesh servirebbe un'altra
-        // suddivisione — ma è un caso raro e lo gestirai dopo.
         MaterialHandle matHandle = instances[0].second;
         Material* material = m_resources.getMaterial(matHandle);
         if (material)
@@ -123,10 +178,6 @@ void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
             }
         }
 
-        // I transform di questo gruppo sono contigui nel buffer?
-        // No — potrebbero essere sparsi. Dobbiamo riordinarli.
-        // Copiamo gli indici in un sotto-buffer compatto e aggiorniamo
-        // il UBO con solo quelli di questo gruppo, partendo da offset 0.
         std::vector<mat4> groupTransforms;
         groupTransforms.reserve(instances.size());
         for (auto& [tIdx, _] : instances)
@@ -139,5 +190,6 @@ void OpenGLRenderer::render(const Scene& scene, const Camera& camera)
         mesh->drawInstanced(static_cast<uint32_t>(instances.size()));
     }
 
+    // unbind sempre — garantisce stato pulito per l'UI
     m_shader.unbind();
 }
