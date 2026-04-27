@@ -9,6 +9,7 @@
 #include "core/bvh/BVHTree.h"
 #include "core/InputManager/InputManager.h"
 #include "core/scene/RenderContext.h"
+#include "core/scene/LightManager.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -41,6 +42,7 @@ int main()
     }
 
     ResourceManager resources;
+    LightManager lightManager;
 
     MeshHandle     meshHandle = resources.loadMesh("assets/teapot_with_uv.obj");
     TextureHandle  texHandle = resources.loadTexture("img/whiteTexture.png");

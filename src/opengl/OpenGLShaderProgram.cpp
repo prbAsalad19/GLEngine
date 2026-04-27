@@ -39,6 +39,35 @@ OpenGLShaderProgram::OpenGLShaderProgram(const std::string& vertPath,
     std::cout << "[ShaderProgram] Program created, ID = " << m_programID << "\n";
 }
 
+OpenGLShaderProgram::OpenGLShaderProgram(const std::string& computePath, ShaderType type)
+{
+    GLuint cs = compileModule(computePath, GL_COMPUTE_SHADER);
+
+    if (!cs) {
+        std::cout << "[ShaderProgram] Compute Shader compilation failed.\n";
+        return;
+    }
+
+    m_programID = glCreateProgram();
+    glAttachShader(m_programID, cs);
+    glLinkProgram(m_programID);
+
+    int success;
+    glGetProgramiv(m_programID, GL_LINK_STATUS, &success);
+    if (!success) {
+        char log[1024];
+        glGetProgramInfoLog(m_programID, sizeof(log), nullptr, log);
+        std::cout << "[ShaderProgram] Compute Link error:\n" << log << "\n";
+        glDeleteProgram(m_programID);
+        m_programID = 0;
+    }
+
+    // Possiamo eliminare il modulo subito dopo il link
+    glDeleteShader(cs);
+    
+    std::cout << "[ShaderProgram] Compute Program created, ID = " << m_programID << "\n";
+}
+
 OpenGLShaderProgram::~OpenGLShaderProgram()
 {
     if (m_programID)
@@ -141,4 +170,11 @@ GLuint OpenGLShaderProgram::compileModule(const std::string& filepath, GLenum ty
     }
 
     return module;
+}
+
+void OpenGLShaderProgram::dispatch(unsigned int groupX, unsigned int groupY, unsigned int groupZ) const
+{
+    if (m_programID) {
+        glDispatchCompute(groupX, groupY, groupZ);
+    }
 }

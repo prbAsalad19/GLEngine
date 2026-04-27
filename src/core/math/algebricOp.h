@@ -100,7 +100,9 @@ struct mat4
     static mat4 create_z_rotation(float angleDeg);
     static mat4 create_model_transform(Vector3 pos, float angleDeg);
     static mat4 create_look_at(Vector3 from, Vector3 to);
+    static mat4 calculate_inverse_view(Vector3 from, Vector3 to);
     static mat4 create_prospective_projection(float fovy, float aspect, float nearPlane, float farPlane);
+    static mat4 calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane);
 };
 
 // ─────────────────────────────────────────────

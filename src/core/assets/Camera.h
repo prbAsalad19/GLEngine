@@ -27,6 +27,9 @@ public:
     Camera();
     Camera(Vector3 position, Vector3 target, float fovDegrees, float nearPlane, float farPlane);
 
-    mat4 getViewMatrix()                      const;
-    mat4 getProjectionMatrix(float aspect)    const;
+    mat4 getViewMatrix()                            const;
+    mat4 getInverseViewMatrix()                     const;
+    mat4 getProjectionMatrix(float aspect)          const;
+    mat4 getInverseProjectionMatrix(float aspect)   const;
+
 };

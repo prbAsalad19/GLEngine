@@ -25,7 +25,19 @@ mat4 Camera::getViewMatrix() const
     return mat4::create_look_at(position, target);
 }
 
+mat4 Camera::getInverseViewMatrix() const
+{
+    // Delegates directly to the existing math helper.
+    // calculate_inverse_view builds the inverse of the view matrix.
+    return mat4::calculate_inverse_view(position, target);
+}
+
 mat4 Camera::getProjectionMatrix(float aspect) const
 {
     return mat4::create_prospective_projection(fovDegrees, aspect, nearPlane, farPlane);
+}
+
+mat4 Camera::getInverseProjectionMatrix(float aspect) const
+{
+    return mat4::calculate_inverse_projection(fovDegrees, aspect, nearPlane, farPlane);
 }

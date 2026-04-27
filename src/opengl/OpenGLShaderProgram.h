@@ -8,6 +8,9 @@ class OpenGLShaderProgram
 {
 public:
     OpenGLShaderProgram(const std::string& vertPath, const std::string& fragPath);
+
+    enum class ShaderType { Compute };
+    OpenGLShaderProgram(const std::string& computePath, ShaderType type);
     ~OpenGLShaderProgram();
 
     OpenGLShaderProgram(const OpenGLShaderProgram&) = delete;
@@ -24,6 +27,7 @@ public:
     void setVec3(const std::string& name, const Vector3& v)   const;
     void setUInt(const std::string& name, unsigned int value) const;
     GLuint getProgramID() const { return m_programID; }
+    void dispatch(unsigned int groupX, unsigned int groupY, unsigned int groupZ) const;
 
 private:
     GLuint m_programID = 0;
