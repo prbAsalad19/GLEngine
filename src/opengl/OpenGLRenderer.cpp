@@ -9,11 +9,13 @@ OpenGLRenderer::OpenGLRenderer(ResourceManager& resources,
     const std::string& geometryFrag,
     const std::string& lightingVert,
     const std::string& lightingFrag,
-    const std::string& clusterComputeShader)
+    const std::string& clusterComputeShader,
+    const std::string& lightCullingShader)
     : m_resources(resources)
     , m_geometryShader(geometryVert, geometryFrag)
     , m_lightingShader(lightingVert, lightingFrag)
     , m_clusterComputeShader(clusterComputeShader, OpenGLShaderProgram::ShaderType::Compute)
+    , m_lightCullingShader(lightCullingShader, OpenGLShaderProgram::ShaderType::Compute)
     , m_cameraUBO(0)
 	, m_transformUBO(0)
 {
@@ -57,6 +59,15 @@ void OpenGLRenderer::init()
     glNamedBufferStorage(m_lightIndexListSSBO, TOTAL_CLUSTERS * 100 * sizeof(uint32_t), nullptr, GL_DYNAMIC_STORAGE_BIT);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_lightIndexListSSBO);
 
+    // LightSSBO: header 16 byte (count + padding) + array GPULight
+    glCreateBuffers(1, &m_lightSSBO);
+    glNamedBufferStorage(m_lightSSBO, 16 + sizeof(GPULight) * MAX_LIGHTS, nullptr, GL_DYNAMIC_STORAGE_BIT);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_lightSSBO);
+
+    // GlobalCounter: singolo uint
+    glCreateBuffers(1, &m_globalCounterSSBO);
+    glNamedBufferStorage(m_globalCounterSSBO, sizeof(uint32_t), nullptr, GL_DYNAMIC_STORAGE_BIT);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_globalCounterSSBO);
 
     //-- UBO setup ------------------------------------------------------------
     glCreateBuffers(1, &m_cameraUBO);
@@ -78,7 +89,7 @@ void OpenGLRenderer::init()
     m_lightingShader.setUniformBlockBinding("CameraData", CAMERA_UBO_BINDING);
     m_lightingShader.unbind();
 
-
+    glCreateVertexArrays(1, &m_fullscreenVAO);
     //-- GBUFFER SETUP --------------------------------------------------------
     setupGBuffer();
 
@@ -101,6 +112,7 @@ void OpenGLRenderer::shutdown()
     glDeleteBuffers(1, &m_clusterAABBSSBO);
     glDeleteBuffers(1, &m_lightGridSSBO);
     glDeleteBuffers(1, &m_lightIndexListSSBO);  
+    glDeleteVertexArrays(1, &m_fullscreenVAO);
 }
 
 void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
@@ -127,7 +139,7 @@ void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
 }
 
 void OpenGLRenderer::render(const Scene& scene,
-                            const LightManager& lightManager,
+                            LightManager& lightManager,
                             const std::vector<RenderObject>& staticObjects,
                             const std::vector<RenderObject>& quasiStaticObjects,
                             const std::vector<RenderObject>& dynamicSlowObjects, 
@@ -137,8 +149,6 @@ void OpenGLRenderer::render(const Scene& scene,
                             const BVHTree& dynamicBVH,
                             const std::vector<RenderObject>& dynamicFastObjects)
 {
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     // ripristina sempre lo stato 3D
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -146,52 +156,36 @@ void OpenGLRenderer::render(const Scene& scene,
 
     if (scene.objects.empty()) return;
 
-    // estrai frustum
-    mat4 view       = camera.getViewMatrix();
-    mat4 projection = camera.getProjectionMatrix(
+    // ── matrici camera ────────────────────────────────────────────────────────
+    mat4 view              = camera.getViewMatrix();
+    mat4 projection        = camera.getProjectionMatrix(
         static_cast<float>(m_width) / static_cast<float>(m_height));
-    mat4 inverseView = camera.getInverseViewMatrix();
+    mat4 inverseView       = camera.getInverseViewMatrix();
     mat4 inverseProjection = camera.getInverseProjectionMatrix(
         static_cast<float>(m_width) / static_cast<float>(m_height));
-
     mat4 vp = projection * view;
 
+    // ── frustum culling ───────────────────────────────────────────────────────
     Frustum frustum;
     frustum.extractFromMatrix(vp);
 
-    // query BVH
     std::vector<uint32_t> visibleIndices;
     visibleIndices.reserve(scene.objects.size());
-    
-    staticBVH.query    (frustum, staticObjects,      visibleIndices);
+
+    staticBVH.query     (frustum, staticObjects,      visibleIndices);
     quasiStaticBVH.query(frustum, quasiStaticObjects, visibleIndices);
-    dynamicBVH.query   (frustum, dynamicSlowObjects,  visibleIndices);
+    dynamicBVH.query    (frustum, dynamicSlowObjects,  visibleIndices);
 
     for (uint32_t i = 0; i < dynamicFastObjects.size(); i++)
     {
         AABB world = AABB::transform(
             m_resources.getMeshAABB(dynamicFastObjects[i].mesh),
             dynamicFastObjects[i].transform.getMatrix());
-
         if (frustum.intersectsAABB(world))
             visibleIndices.push_back(i);
     }
 
-    // const auto& rootNode = bvh.getNodes()[0];
-    // std::cout << "=== ROOT AABB ===\n";
-    // std::cout << "min: " << rootNode.aabb.bounds[0].x << " " 
-    //         << rootNode.aabb.bounds[0].y << " " 
-    //         << rootNode.aabb.bounds[0].z << "\n";
-    // std::cout << "max: " << rootNode.aabb.bounds[1].x << " " 
-    //         << rootNode.aabb.bounds[1].y << " " 
-    //         << rootNode.aabb.bounds[1].z << "\n";
-
-    // std::cout << "visibili: " << visibleIndices.size() 
-    //       << " / " << scene.objects.size() << "\n";
-
-    // Raggruppa per mesh — stessa mesh = stessa draw call
-    // key:   MeshHandle
-    // value: lista di { transformIndex, materialHandle }
+    // ── grouping per mesh ─────────────────────────────────────────────────────
     std::unordered_map<MeshHandle, std::vector<std::pair<uint32_t, MaterialHandle>>> groups;
 
     uint32_t index = 0;
@@ -204,29 +198,27 @@ void OpenGLRenderer::render(const Scene& scene,
         ++index;
     }
 
-    // Upload camera UBO
+    // ── upload camera UBO ─────────────────────────────────────────────────────
     CameraUBOData cameraData;
-    memcpy(cameraData.view, view.entries, sizeof(float) * 16);
-    memcpy(cameraData.projection, projection.entries, sizeof(float) * 16);
-    memcpy(cameraData.viewProjection, vp.entries, sizeof(float) * 16);
-    memcpy(cameraData.inverseView, inverseView.entries, sizeof(float) * 16);
-    memcpy(cameraData.inverseProjection, inverseProjection.entries, sizeof(float) * 16);
+    memcpy(cameraData.view,               view.entries,              sizeof(float) * 16);
+    memcpy(cameraData.projection,         projection.entries,        sizeof(float) * 16);
+    memcpy(cameraData.viewProjection,     vp.entries,                sizeof(float) * 16);
+    memcpy(cameraData.inverseView,        inverseView.entries,       sizeof(float) * 16);
+    memcpy(cameraData.inverseProjection,  inverseProjection.entries, sizeof(float) * 16);
     cameraData.cameraPosition[0] = camera.position.entries[0];
     cameraData.cameraPosition[1] = camera.position.entries[1];
     cameraData.cameraPosition[2] = camera.position.entries[2];
-    cameraData.zNear = camera.nearPlane;
-    cameraData.zFar  = camera.farPlane;
-
-    cameraData.gridRes[0] = CLUSTERS_X;
-    cameraData.gridRes[1] = CLUSTERS_Y;
-    cameraData.gridRes[2] = CLUSTERS_Z;
-    cameraData.gridRes[3] = 0; // padding
-
-    cameraData.screenRes[0] = (float)m_width;
-    cameraData.screenRes[1] = (float)m_height;
-
+    cameraData.zNear        = camera.nearPlane;
+    cameraData.zFar         = camera.farPlane;
+    cameraData.gridRes[0]   = CLUSTERS_X;
+    cameraData.gridRes[1]   = CLUSTERS_Y;
+    cameraData.gridRes[2]   = CLUSTERS_Z;
+    cameraData.gridRes[3]   = 0;
+    cameraData.screenRes[0] = static_cast<float>(m_width);
+    cameraData.screenRes[1] = static_cast<float>(m_height);
     glNamedBufferSubData(m_cameraUBO, 0, sizeof(CameraUBOData), &cameraData);
 
+    // ── cluster build (solo se dirty) ─────────────────────────────────────────
     if (m_clustersDirty)
     {
         m_clusterComputeShader.bind();
@@ -237,7 +229,35 @@ void OpenGLRenderer::render(const Scene& scene,
         m_clustersDirty = false;
     }
 
+    // ── upload light SSBO (solo se dirty) ────────────────────────────────────
+    if (lightManager.isDirty())
+    {
+        const auto& lights = lightManager.getGPULights();
+        uint32_t count     = lightManager.count();
+
+        // header: lightCount (uint) + 3 float padding + array di GPULight
+        glNamedBufferSubData(m_lightSSBO, 0,
+            sizeof(uint32_t), &count);
+        glNamedBufferSubData(m_lightSSBO, 16,
+            sizeof(GPULight) * count, lights.data());
+
+        lightManager.clearDirty();
+    }
+
+    // ── light culling — ogni frame ────────────────────────────────────────────
+    // reset contatore atomico
+    uint32_t zero = 0;
+    glNamedBufferSubData(m_globalCounterSSBO, 0, sizeof(uint32_t), &zero);
+
+    m_lightCullingShader.bind();
+    uint32_t numGroups = (TOTAL_CLUSTERS + 63) / 64;
+    m_lightCullingShader.dispatch(numGroups, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    m_lightCullingShader.unbind();
+
+    // ── geometry e lighting pass ──────────────────────────────────────────────
     geometryPass(scene, groups);
+    lightingPass();
 }
 
 void OpenGLRenderer::geometryPass(const Scene& scene, 
@@ -330,6 +350,60 @@ void OpenGLRenderer::geometryPass(const Scene& scene,
 
     //-- IMPORTANT: restore state for next pass ------------------------------
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void OpenGLRenderer::lightingPass()
+{
+    // 1. Output al framebuffer di default
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_width, m_height);
+    
+    // In un deferred, il lighting pass non deve pulire il depth (già scritto nel geom pass)
+    // ma solo il colore.
+    glClear(GL_COLOR_BUFFER_BIT); 
+
+    // 2. Stato della GPU: Disabilita scrittura depth e blending (solitamente)
+    glDepthMask(GL_FALSE); 
+    glDisable(GL_DEPTH_TEST); // Non serve testare la depth per un quad fullscreen
+    glDisable(GL_BLEND);
+
+    m_lightingShader.bind();
+    
+    // 3. Bind delle Texture dal GBuffer (usando i tuoi membri m_gBuffer)
+    // Slot 0: Normals (RG16F)
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_gBuffer.normal);
+    m_lightingShader.setInt("u_gNormal", 0);
+
+    // Slot 1: Albedo (RGBA8)
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_gBuffer.albedo);
+    m_lightingShader.setInt("u_gAlbedo", 1);
+
+    // Slot 2: Material (Roughness, Metallic, AO)
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, m_gBuffer.material);
+    m_lightingShader.setInt("u_gMaterial", 2);
+
+    // Slot 3: Depth (Fondamentale per ricostruire la posizione nel fragment shader)
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, m_gBuffer.depth);
+    m_lightingShader.setInt("u_gDepth", 3);
+
+    // 4. Binding degli SSBO per il Clustered Lighting
+    // Usiamo i binding index definiti nella tua init()
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_lightGridSSBO);      // Light Grid
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_lightIndexListSSBO); // Index List
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_lightSSBO);          // Lights Data
+    
+    glBindVertexArray(m_fullscreenVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+
+    // 6. Ripristino stato
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+    m_lightingShader.unbind();
 }
 
 void OpenGLRenderer::setupGBuffer()

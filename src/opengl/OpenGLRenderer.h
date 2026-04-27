@@ -65,14 +65,15 @@ public:
         const std::string& geometryFrag,
         const std::string& lightingVert,
         const std::string& lightingFrag,
-        const std::string& clusterComputeShader);
+        const std::string& clusterComputeShader,
+        const std::string& lightCullingShader);
 	~OpenGLRenderer();
 
     void init();
     void shutdown();
     void onResize(unsigned int width, unsigned int height);
     void render(const Scene& scene,
-                            const LightManager& lightManager, 
+                            LightManager& lightManager, 
                             const std::vector<RenderObject>& staticObjects,
                             const std::vector<RenderObject>& quasiStaticObjects,
                             const std::vector<RenderObject>& dynamicSlowObjects,
@@ -98,6 +99,7 @@ private:
     OpenGLShaderProgram m_geometryShader;
     OpenGLShaderProgram m_lightingShader;
     OpenGLShaderProgram m_clusterComputeShader;
+    OpenGLShaderProgram m_lightCullingShader;
 
     bool m_clustersDirty = true;
 
@@ -106,12 +108,17 @@ private:
     unsigned int        m_width = 1280;
     unsigned int        m_height = 720;
 
+    GLuint m_fullscreenVAO;
+
 	GLuint m_cameraUBO;
 	GLuint m_transformUBO;
 
     GLuint m_clusterAABBSSBO;
     GLuint m_lightGridSSBO;
     GLuint m_lightIndexListSSBO;
+
+    GLuint m_lightSSBO;
+    GLuint m_globalCounterSSBO;
 
 	mat4 m_transformStagingBuffer[MAX_RENDER_OBJECTS];
 };
