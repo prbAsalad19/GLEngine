@@ -153,6 +153,29 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
     return m;
 }
 
+// mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane) {
+//     float halfFov = fovy * PI / 360.0f;
+//     float t = tanf(halfFov);
+//     float n = nearPlane;
+//     float f = farPlane;
+
+//     mat4 m;
+//     for (int i = 0; i < 16; ++i) m.entries[i] = 0.0f;
+
+//     m.entries[0]  = aspect * t;
+//     m.entries[5]  = t;
+    
+//     // In una proiezione inversa standard:
+//     // m.entries[14] mappa Z = -W (Riga 2, Colonna 3)
+//     m.entries[14] = -1.0f; 
+
+//     // m.entries[11] e [15] decodificano la depth non-lineare
+//     m.entries[11] = -(f - n) / (2.0f * n * f); // <-- Corretto (Riga 3, Colonna 2)
+//     m.entries[15] =  (f + n) / (2.0f * n * f); // <-- Corretto (Riga 3, Colonna 3)
+    
+//     return m;
+// }
+
 mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane) {
     float halfFov = fovy * PI / 360.0f;
     float t = tanf(halfFov);

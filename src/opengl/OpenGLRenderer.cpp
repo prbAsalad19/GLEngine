@@ -255,6 +255,8 @@ void OpenGLRenderer::render(const Scene& scene,
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     m_lightCullingShader.unbind();
 
+    glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+    
     // ── geometry e lighting pass ──────────────────────────────────────────────
     geometryPass(scene, groups);
     lightingPass();

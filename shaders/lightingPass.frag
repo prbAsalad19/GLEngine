@@ -3,11 +3,11 @@
 out vec4 FragColor;
 in vec2 TexCoords;
 
-// --- GBuffer Samplers (Binding espliciti 460 core) ---
-layout(binding = 0) uniform sampler2D u_gNormal;   // RG16F (Octahedron encoded)
-layout(binding = 1) uniform sampler2D u_gAlbedo;   // RGBA8
-layout(binding = 2) uniform sampler2D u_gMaterial; // RGBA8 (R=Rough, G=Metal, B=AO)
-layout(binding = 3) uniform sampler2D u_gDepth;    // Depth24
+// --- GBuffer Samplers ---
+layout(binding = 0) uniform sampler2D u_gNormal;
+layout(binding = 1) uniform sampler2D u_gAlbedo;
+layout(binding = 2) uniform sampler2D u_gMaterial;
+layout(binding = 3) uniform sampler2D u_gDepth;
 
 // --- UBO Camera Data ---
 layout (std140, binding = 0) uniform CameraData {
@@ -23,10 +23,22 @@ layout (std140, binding = 0) uniform CameraData {
     vec2 screenRes;
 };
 
-// --- SSBO Strutture Luci ---
-struct GPULight {
-    vec4 position; // w = radius
-    vec4 color;    // w = intensity
+// --- Lights ---
+struct GPULight
+{
+    vec3  position;
+    float radius;
+
+    vec3  color;
+    float intensity;
+
+    vec3  direction;
+    float outerAngleCos;
+
+    uint  type;
+    float innerAngleCos;
+    float _pad0;
+    float _pad1;
 };
 
 layout(std430, binding = 3) buffer LightGrid { uvec2 clusters[]; };
@@ -37,75 +49,96 @@ layout(std430, binding = 5) buffer LightData {
     GPULight lights[];
 };
 
-// --- DECODIFICA OCTAHEDRON ---
-// Questa funzione inverte esattamente quello che fai nel geometry shader
-vec3 octDecode(vec2 f) {
+// --- OCT DECODE ---
+vec3 octDecode(vec2 f)
+{
     vec3 v = vec3(f.xy, 1.0 - abs(f.x) - abs(f.y));
-    if (v.z < 0.0) {
-        v.xy = (1.0 - abs(v.yx)) * vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0);
-    }
+    if (v.z < 0.0)
+        v.xy = (1.0 - abs(v.yx)) * sign(v.xy);
     return normalize(v);
 }
 
-vec3 getPositionFromDepth(float depth) {
-    vec4 ndc = vec4(TexCoords * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-    vec4 worldPos = inverseView * inverseProjection * ndc;
-    return worldPos.xyz / worldPos.w;
+// --- CORRECT DEPTH RECONSTRUCTION ---
+vec3 getWorldPosition(float depth)
+{
+    vec4 ndc = vec4(TexCoords * 2.0 - 1.0,
+                    depth * 2.0 - 1.0,
+                    1.0);
+
+    vec4 viewPos = inverseProjection * ndc;
+    viewPos /= viewPos.w;
+
+    vec4 worldPos = inverseView * viewPos;
+    return worldPos.xyz;
 }
 
-void main() {
+void main()
+{
     float depth = texture(u_gDepth, TexCoords).r;
     if (depth >= 1.0) discard;
 
-    // 1. Decodifica dei dati
+    // --- GBUFFER DECODE ---
+    vec3 worldPos = getWorldPosition(depth);
+
     vec2 encodedNormal = texture(u_gNormal, TexCoords).rg;
-    vec3 Normal = octDecode(encodedNormal); // <--- DECODIAMO QUI
-    
-    vec3 worldPos = getPositionFromDepth(depth);
-    vec4 albedoTex = texture(u_gAlbedo, TexCoords);
-    vec3 Albedo = albedoTex.rgb;
-    
+    vec3 Normal = normalize(mat3(inverseView) * octDecode(encodedNormal));
+
+    vec3 Albedo = texture(u_gAlbedo, TexCoords).rgb;
+
     vec4 mat = texture(u_gMaterial, TexCoords);
     float Roughness = mat.r;
     float Metallic  = mat.g;
     float AO        = mat.b;
 
-    // 2. Clustered Logic
-    vec4 viewPos = view * vec4(worldPos, 1.0);
-    float zView = -viewPos.z; 
-    uint zSlice = uint(max(0.0, log(zView / zNear) * float(gridRes.z) / log(zFar / zNear)));
-    
-    uvec3 clusterCoords = uvec3(
-        uvec2(gl_FragCoord.xy / screenRes * vec2(gridRes.xy)),
-        zSlice
-    );
-    uint clusterIndex = clusterCoords.x + 
-                        clusterCoords.y * gridRes.x + 
-                        clusterCoords.z * gridRes.x * gridRes.y;
+    // --- VIEW SPACE ---
+    vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
+    float zView = -viewPos.z;
 
-    // 3. Lighting (PBR Semplificato)
+    // evita NaN nel log
+    zView = max(zView, zNear + 0.0001);
+
+    // --- Z SLICE ---
+    float zSliceF = log(zView / zNear) * float(gridRes.z) / log(zFar / zNear);
+    uint zSlice = uint(clamp(zSliceF, 0.0, float(gridRes.z - 1)));
+
+    // --- XY CLUSTER ---
+    vec2 clusterXYf = gl_FragCoord.xy / screenRes * vec2(gridRes.xy);
+    uvec2 clusterXY = uvec2(clamp(clusterXYf, vec2(0.0), vec2(gridRes.xy) - 1.0));
+
+    uvec3 clusterCoords = uvec3(clusterXY, zSlice);
+
+    uint clusterIndex =
+        clusterCoords.x +
+        clusterCoords.y * gridRes.x +
+        clusterCoords.z * gridRes.x * gridRes.y;
+
+    // --- LIGHTING ---
     vec3 V = normalize(cameraPosition - worldPos);
-    vec3 lighting = Albedo * 0.02 * AO; // Ambientale pesata dall'AO
-    
+
+    vec3 lighting = Albedo * 0.02; // ambient
+
     uvec2 lightIndices = clusters[clusterIndex];
-    for (uint i = 0; i < lightIndices.y; i++) {
+
+    for (uint i = 0; i < lightIndices.y; i++)
+    {
         uint lightIdx = globalIndexList[lightIndices.x + i];
         GPULight light = lights[lightIdx];
 
-        vec3 L = light.position.xyz - worldPos;
+        vec3 L = light.position - worldPos;
         float dist = length(L);
-        float radius = light.position.w;
-        
-        if (dist < radius) {
-            L /= dist; // normalize
+
+        if (dist < light.radius)
+        {
+            L /= dist;
+
             vec3 H = normalize(V + L);
-            float attenuation = pow(clamp(1.0 - (dist / radius), 0.0, 1.0), 2.0);
-            vec3 radiance = light.color.rgb * light.color.a * attenuation;
+
+            float attenuation = pow(clamp(1.0 - (dist / light.radius), 0.0, 1.0), 2.0);
+            vec3 radiance = light.color * light.intensity * attenuation;
 
             float nDotL = max(dot(Normal, L), 0.0);
             vec3 diffuse = Albedo * nDotL;
-            
-            // Speculare veloce
+
             float nDotH = max(dot(Normal, H), 0.0);
             float spec = pow(nDotH, mix(10.0, 256.0, 1.0 - Roughness)) * Metallic;
 
@@ -113,6 +146,8 @@ void main() {
         }
     }
 
-    // 4. Final Color (Gamma 2.2)
-    FragColor = vec4(pow(lighting / (lighting + 1.0), vec3(1.0/2.2)), 1.0);
+    FragColor = vec4(
+        pow(lighting / (lighting + 1.0), vec3(1.0 / 2.2)),
+        1.0
+    );
 }

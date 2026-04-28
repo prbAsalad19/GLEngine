@@ -107,7 +107,7 @@ int main()
 
     OpenGLRenderer renderer(resources, "shaders/geometryPass.vert", "shaders/geometryPass.frag",
                                     "shaders/lightingPass.vert", "shaders/lightingPass.frag",
-                            "shaders/clusterCompute.comp", "shaders/lightCulling.comp");
+                            "shaders/gridGen.comp", "shaders/lightCulling.comp");
     renderer.init();
     std::cout << "[Main] 3D renderer initialized\n";
 
