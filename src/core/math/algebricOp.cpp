@@ -152,6 +152,25 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
     m.entries[14] = -(2.0f * n * f) / (f - n);
     return m;
 }
+mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane)
+{
+    float halfFov = fovy * PI / 360.0f;
+    float t = tanf(halfFov);
+    float n = nearPlane;
+    float f = farPlane;
+
+    mat4 m;
+    for (int i = 0; i < 16; ++i) m.entries[i] = 0.0f;
+
+    m.entries[0]  = aspect * t;                      // col0, row0
+    m.entries[5]  = t;                               // col1, row1
+    m.entries[11] = (n - f) / (2.0f * n * f);        // col2, row3  ← was wrongly -1
+    m.entries[14] = -1.0f;                           // col3, row2
+    m.entries[15] = (n + f) / (2.0f * n * f);        // col3, row3
+    // entries[13] intentionally stays 0             // col3, row1  ← was wrongly ≠ 0
+
+    return m;
+}
 
 // mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane) {
 //     float halfFov = fovy * PI / 360.0f;
@@ -176,24 +195,24 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
 //     return m;
 // }
 
-mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane) {
-    float halfFov = fovy * PI / 360.0f;
-    float t = tanf(halfFov);
-    float n = nearPlane;
-    float f = farPlane;
+// mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane) {
+//     float halfFov = fovy * PI / 360.0f;
+//     float t = tanf(halfFov);
+//     float n = nearPlane;
+//     float f = farPlane;
 
-    mat4 m;
-    for (int i = 0; i < 16; ++i) m.entries[i] = 0.0f;
+//     mat4 m;
+//     for (int i = 0; i < 16; ++i) m.entries[i] = 0.0f;
 
-    m.entries[0]  = aspect * t;
-    m.entries[5]  = t;
-    m.entries[11] = -1.0f;
-    m.entries[14] = -1.0f;
-    m.entries[13] = -(f - n) / (2.0f * n * f);
-    m.entries[15] = (f + n) / (2.0f * n * f);
+//     m.entries[0]  = aspect * t;
+//     m.entries[5]  = t;
+//     m.entries[11] = -1.0f;
+//     m.entries[14] = -1.0f;
+//     m.entries[13] = -(f - n) / (2.0f * n * f);
+//     m.entries[15] = (f + n) / (2.0f * n * f);
     
-    return m;
-}
+//     return m;
+// }
 
 // ─────────────────────────────────────────────
 //  Vector4

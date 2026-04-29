@@ -86,6 +86,68 @@ bool MeshLoader::loadOBJ(const std::string& filepath, CPUMesh& out)
             }
         }
     }
+
+    // ── Generate flat normals if the OBJ file had none ──────────────────────
+    if (out.getNormals().empty() && !out.getVertices().empty())
+    {
+        const auto& pos  = out.getVertices();
+        const auto& face = out.getFaces();
+
+        // Determine current face stride (1 = v only, 2 = v/vt)
+        int oldStep = 1;
+        if (!out.getTextureCoord().empty()) oldStep = 2;
+
+        // Rebuild face array with normal indices included
+        std::vector<unsigned int> oldFaces(face.begin(), face.end());
+        out.clearFaces();
+
+        for (size_t i = 0; i + oldStep * 3 - 1 < oldFaces.size(); i += oldStep * 3)
+        {
+            // Get the three vertex indices of this triangle
+            int v0 = oldFaces[i];
+            int v1 = oldFaces[i + oldStep];
+            int v2 = oldFaces[i + oldStep * 2];
+
+            // Read positions
+            float p0[3] = { pos[v0*3+0], pos[v0*3+1], pos[v0*3+2] };
+            float p1[3] = { pos[v1*3+0], pos[v1*3+1], pos[v1*3+2] };
+            float p2[3] = { pos[v2*3+0], pos[v2*3+1], pos[v2*3+2] };
+
+            // Compute edges
+            float e1[3] = { p1[0]-p0[0], p1[1]-p0[1], p1[2]-p0[2] };
+            float e2[3] = { p2[0]-p0[0], p2[1]-p0[1], p2[2]-p0[2] };
+
+            // Cross product → face normal
+            float nx = e1[1]*e2[2] - e1[2]*e2[1];
+            float ny = e1[2]*e2[0] - e1[0]*e2[2];
+            float nz = e1[0]*e2[1] - e1[1]*e2[0];
+
+            // Normalize
+            float len = sqrtf(nx*nx + ny*ny + nz*nz);
+            if (len > 0.0f) { nx /= len; ny /= len; nz /= len; }
+            else            { nx = 0.0f; ny = 0.0f; nz = 1.0f; }
+
+            // Add this normal to the CPUMesh
+            int nIdx = static_cast<int>(out.getNormals().size() / 3);
+            out.addNormal(nx, ny, nz);
+
+            // Re-emit face with v/vt/vn (new step = 3)
+            for (int k = 0; k < 3; ++k)
+            {
+                int base = static_cast<int>(i) + k * oldStep;
+                out.addFaceValue(oldFaces[base]);               // vertex index
+                if (oldStep >= 2)
+                    out.addFaceValue(oldFaces[base + 1]);       // texcoord index
+                else
+                    out.addFaceValue(-1);                       // no texcoord placeholder
+                out.addFaceValue(nIdx);                         // normal index (same for all 3 verts)
+            }
+        }
+
+        std::cout << "[MeshLoader] Generated " << (out.getNormals().size() / 3)
+                  << " flat normals for mesh without vn data\n";
+    }
+
     return true;
 }
 

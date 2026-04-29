@@ -33,6 +33,7 @@ public:
     void addFaceValue(int val) { faces.push_back(val); }
 
     void clear() { vertices.clear(); textureCoord.clear(); normals.clear(); faces.clear(); }
+    void clearFaces() { faces.clear(); }
 
 private:
     std::vector<float> vertices;

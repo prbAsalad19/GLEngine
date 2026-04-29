@@ -1,4 +1,4 @@
-﻿#include "OpenGLRenderer.h"
+#include "OpenGLRenderer.h"
 #include "core/assets/Material.h"
 #include "core/scene/RenderObject.h"
 #include <vector>
@@ -88,6 +88,14 @@ void OpenGLRenderer::init()
     m_lightingShader.bind();
     m_lightingShader.setUniformBlockBinding("CameraData", CAMERA_UBO_BINDING);
     m_lightingShader.unbind();
+
+    m_clusterComputeShader.bind();
+    m_clusterComputeShader.setUniformBlockBinding("CameraData", CAMERA_UBO_BINDING);
+    m_clusterComputeShader.unbind();
+
+    m_lightCullingShader.bind();
+    m_lightCullingShader.setUniformBlockBinding("CameraData", CAMERA_UBO_BINDING);
+    m_lightCullingShader.unbind();
 
     glCreateVertexArrays(1, &m_fullscreenVAO);
     //-- GBUFFER SETUP --------------------------------------------------------
