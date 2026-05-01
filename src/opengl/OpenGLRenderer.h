@@ -82,7 +82,15 @@ public:
                             const BVHTree& quasiStaticBVH,
                             const BVHTree& dynamicBVH,
                             const std::vector<RenderObject>& dynamicFastObjects);
-
+    
+    void enVsync(bool enabled)
+    {
+        if (enabled)
+            glfwSwapInterval(1);
+        else
+            glfwSwapInterval(0);
+    }
+    
 private:
     void geometryPass(const Scene& scene, 
                         const std::unordered_map<MeshHandle, 

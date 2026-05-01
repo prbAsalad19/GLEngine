@@ -181,6 +181,8 @@ int main()
     dynamicBVH.build(dynamicSlowObjects);
 
 
+    renderer.enVsync(true);
+
     while (!glfwWindowShouldClose(window))
     {
         double now = glfwGetTime();
@@ -309,8 +311,6 @@ static GLFWwindow* createWindow(int width, int height, const char* title)
     }
 
     glfwMakeContextCurrent(window);
-
-    glfwSwapInterval(0);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
