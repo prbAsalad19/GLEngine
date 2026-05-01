@@ -114,6 +114,28 @@ mat4 mat4::create_look_at(Vector3 from, Vector3 to)
     return m;
 }
 
+mat4 mat4::calculate_inverse_view(Vector3 from, Vector3 to) {
+    const Vector3 worldUp = { 0.0f, 0.0f, 1.0f };
+    Vector3 f = { to.entries[0] - from.entries[0], to.entries[1] - from.entries[1], to.entries[2] - from.entries[2] };
+    f.normalize();
+
+    Vector3 r = Vector3::normalize(Vector3::cross(f, worldUp));
+    Vector3 u = Vector3::normalize(Vector3::cross(r, f));
+
+    mat4 m;
+    // La parte 3x3 è semplicemente la trasposta della rotazione della View
+    m.entries[0] = r.entries[0];  m.entries[1] = r.entries[1];  m.entries[2] = r.entries[2];  m.entries[3] = 0.0f;
+    m.entries[4] = u.entries[0];  m.entries[5] = u.entries[1];  m.entries[6] = u.entries[2];  m.entries[7] = 0.0f;
+    m.entries[8] = -f.entries[0]; m.entries[9] = -f.entries[1]; m.entries[10] = -f.entries[2]; m.entries[11] = 0.0f;
+    
+    // La traslazione dell'inversa è semplicemente la posizione della camera nel mondo
+    m.entries[12] = from.entries[0];
+    m.entries[13] = from.entries[1];
+    m.entries[14] = from.entries[2];
+    m.entries[15] = 1.0f;
+    return m;
+}
+
 mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPlane, float farPlane)
 {
     float halfFov = fovy * PI / 360.0f;
@@ -130,6 +152,67 @@ mat4 mat4::create_prospective_projection(float fovy, float aspect, float nearPla
     m.entries[14] = -(2.0f * n * f) / (f - n);
     return m;
 }
+mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane)
+{
+    float halfFov = fovy * PI / 360.0f;
+    float t = tanf(halfFov);
+    float n = nearPlane;
+    float f = farPlane;
+
+    mat4 m;
+    for (int i = 0; i < 16; ++i) m.entries[i] = 0.0f;
+
+    m.entries[0]  = aspect * t;                      // col0, row0
+    m.entries[5]  = t;                               // col1, row1
+    m.entries[11] = (n - f) / (2.0f * n * f);        // col2, row3  ← was wrongly -1
+    m.entries[14] = -1.0f;                           // col3, row2
+    m.entries[15] = (n + f) / (2.0f * n * f);        // col3, row3
+    // entries[13] intentionally stays 0             // col3, row1  ← was wrongly ≠ 0
+
+    return m;
+}
+
+// mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane) {
+//     float halfFov = fovy * PI / 360.0f;
+//     float t = tanf(halfFov);
+//     float n = nearPlane;
+//     float f = farPlane;
+
+//     mat4 m;
+//     for (int i = 0; i < 16; ++i) m.entries[i] = 0.0f;
+
+//     m.entries[0]  = aspect * t;
+//     m.entries[5]  = t;
+    
+//     // In una proiezione inversa standard:
+//     // m.entries[14] mappa Z = -W (Riga 2, Colonna 3)
+//     m.entries[14] = -1.0f; 
+
+//     // m.entries[11] e [15] decodificano la depth non-lineare
+//     m.entries[11] = -(f - n) / (2.0f * n * f); // <-- Corretto (Riga 3, Colonna 2)
+//     m.entries[15] =  (f + n) / (2.0f * n * f); // <-- Corretto (Riga 3, Colonna 3)
+    
+//     return m;
+// }
+
+// mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlane, float farPlane) {
+//     float halfFov = fovy * PI / 360.0f;
+//     float t = tanf(halfFov);
+//     float n = nearPlane;
+//     float f = farPlane;
+
+//     mat4 m;
+//     for (int i = 0; i < 16; ++i) m.entries[i] = 0.0f;
+
+//     m.entries[0]  = aspect * t;
+//     m.entries[5]  = t;
+//     m.entries[11] = -1.0f;
+//     m.entries[14] = -1.0f;
+//     m.entries[13] = -(f - n) / (2.0f * n * f);
+//     m.entries[15] = (f + n) / (2.0f * n * f);
+    
+//     return m;
+// }
 
 // ─────────────────────────────────────────────
 //  Vector4

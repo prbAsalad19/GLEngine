@@ -1,0 +1,63 @@
+#version 460 core
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout (std140, binding = 0) uniform CameraData {
+    mat4 view;
+    mat4 projection;
+    mat4 viewProjection;
+    mat4 inverseView;
+    mat4 inverseProjection;
+    vec3 cameraPosition;
+    float zNear;
+    float zFar;
+    uvec4 gridRes; // x, y, z, padding
+    vec2 screenRes;
+};
+
+struct ClusterAABB {
+    vec4 minPoint;
+    vec4 maxPoint;
+};
+
+// Cambiato binding a 2 per evitare conflitti con UBO
+layout (std430, binding = 2) buffer ClusterBuffer {
+    ClusterAABB clusters[];
+};
+
+vec4 screenToView(vec4 screen) {
+    vec2 texCoord = screen.xy / screenRes;
+    vec4 clip = vec4(texCoord * 2.0 - 1.0, screen.z, screen.w);
+    vec4 view = inverseProjection * clip;
+    return view / view.w;
+}
+
+void main() {
+    uint clusterIndex = gl_GlobalInvocationID.x;
+    uint totalClusters = gridRes.x * gridRes.y * gridRes.z;
+    if (clusterIndex >= totalClusters) return;
+
+    uint zIdx = clusterIndex / (gridRes.x * gridRes.y);
+    uint yIdx = (clusterIndex % (gridRes.x * gridRes.y)) / gridRes.x;
+    uint xIdx = clusterIndex % gridRes.x;
+
+    vec2 tileSize = screenRes / vec2(gridRes.xy); // Corretto typo
+
+    vec4 minPointSS = vec4(vec2(xIdx, yIdx) * tileSize, 0.0, 1.0);
+    vec4 maxPointSS = vec4(vec2(xIdx + 1, yIdx + 1) * tileSize, 0.0, 1.0);
+
+    float clusterNear = zNear * pow(zFar / zNear, float(zIdx) / gridRes.z);
+    float clusterFar  = zNear * pow(zFar / zNear, float(zIdx + 1) / gridRes.z);
+
+    vec3 minPointVS = screenToView(minPointSS).xyz;
+    vec3 maxPointVS = screenToView(maxPointSS).xyz;
+
+    // OpenGL View Space: camera guarda verso -Z
+    vec3 minNear = minPointVS * (-clusterNear / minPointVS.z);
+    vec3 minFar  = minPointVS * (-clusterFar / minPointVS.z);
+    vec3 maxNear = maxPointVS * (-clusterNear / maxPointVS.z);
+    vec3 maxFar  = maxPointVS * (-clusterFar / maxPointVS.z);
+
+    clusters[clusterIndex].minPoint = vec4(min(min(minNear, minFar), min(maxNear, maxFar)), 0.0);
+    clusters[clusterIndex].maxPoint = vec4(max(max(minNear, minFar), max(maxNear, maxFar)), 0.0);
+}

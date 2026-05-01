@@ -9,6 +9,7 @@
 #include "core/bvh/BVHTree.h"
 #include "core/InputManager/InputManager.h"
 #include "core/scene/RenderContext.h"
+#include "core/scene/LightManager.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -41,6 +42,7 @@ int main()
     }
 
     ResourceManager resources;
+    LightManager lightManager;
 
     MeshHandle     meshHandle = resources.loadMesh("assets/teapot_with_uv.obj");
     TextureHandle  texHandle = resources.loadTexture("img/whiteTexture.png");
@@ -83,6 +85,13 @@ int main()
     Quaternion startRot = Quaternion::identity();
     Quaternion endRot = Quaternion::fromAxisAngle({ 0.0f, 0.0f, 1.0f }, 180.0f);
 
+    LightDesc lightDesc;
+    lightDesc.position = { 0.0f, 0.0f, 5.0f };
+    lightDesc.color = { 1.0f, 1.0f, 1.0f };
+    lightDesc.intensity = 50.0f;
+    lightDesc.radius = 10.0f;
+    lightManager.add(lightDesc);
+
     Camera camera;
     camera.position = { -5.0f, 0.0f, 3.0f };
     camera.target =  { 0.0f, 0.0f, 0.0f };
@@ -96,7 +105,9 @@ int main()
     int sensitivity = 65;
     float moveSpeed = 5.0f;
 
-    OpenGLRenderer renderer(resources, "shaders/vertex.txt", "shaders/fragment.txt");
+    OpenGLRenderer renderer(resources, "shaders/geometryPass.vert", "shaders/geometryPass.frag",
+                                    "shaders/lightingPass.vert", "shaders/lightingPass.frag",
+                            "shaders/gridGen.comp", "shaders/lightCulling.comp");
     renderer.init();
     std::cout << "[Main] 3D renderer initialized\n";
 
@@ -260,7 +271,12 @@ int main()
 
         dynamicBVH.update(dynamicSlowObjects);
 
-        renderer.render(scene, staticObjects, quasiStaticObjects, dynamicSlowObjects, camera, staticBVH, quasiStaticBVH, dynamicBVH, dynamicFastObjects);
+        renderer.render(scene, lightManager, 
+                staticObjects, 
+                quasiStaticObjects, 
+                dynamicSlowObjects, 
+                camera, staticBVH, quasiStaticBVH, dynamicBVH, dynamicFastObjects);
+
         UIrenderer.render(canvas);
         glfwSwapBuffers(window);
     }

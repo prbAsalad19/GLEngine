@@ -1,0 +1,121 @@
+#version 460 core
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// ── UBO ──────────────────────────────────────────────────────────────────────
+layout(std140, binding = 0) uniform CameraData
+{
+    mat4 view;
+    mat4 projection;
+    mat4 viewProjection;
+    mat4 inverseView;
+    mat4 inverseProjection;
+    vec3 cameraPosition;
+    float zNear;
+    float zFar;
+    uvec4 gridRes;
+    vec2 screenRes;
+};
+
+// ── SSBO ─────────────────────────────────────────────────────────────────────
+struct ClusterAABB
+{
+    vec4 minPoint;
+    vec4 maxPoint;
+};
+
+struct LightGrid
+{
+    uint offset;
+    uint count;
+};
+
+struct GPULight
+{
+    vec3  position;
+    float radius;
+
+    vec3  color;
+    float intensity;
+
+    vec3  direction;
+    float outerAngleCos;
+
+    uint  type;
+    float innerAngleCos;
+    float _pad0;
+    float _pad1;
+};
+
+layout(std430, binding = 2) readonly buffer ClusterBuffer
+{
+    ClusterAABB clusters[];
+};
+
+layout(std430, binding = 3) writeonly buffer LightGridBuffer
+{
+    LightGrid lightGrid[];
+};
+
+layout(std430, binding = 4) writeonly buffer LightIndexListBuffer
+{
+    uint lightIndexList[];
+};
+
+layout(std430, binding = 5) readonly buffer LightBuffer
+{
+    uint  lightCount;
+    float _pad[3];
+    GPULight lights[];
+};
+
+layout(std430, binding = 6) buffer GlobalCounterBuffer
+{
+    uint globalLightIndexCount;
+};
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+#define MAX_LIGHTS_PER_CLUSTER 128
+
+// ── Sphere vs AABB test ───────────────────────────────────────────────────────
+bool sphereIntersectsAABB(vec3 center, float radius, vec3 aabbMin, vec3 aabbMax)
+{
+    // punto più vicino dell'AABB al centro della sfera
+    vec3 closest = clamp(center, aabbMin, aabbMax);
+    vec3 diff    = closest - center;
+    return dot(diff, diff) <= radius * radius;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+void main()
+{
+    uint clusterIdx = gl_GlobalInvocationID.x;
+    uint totalClusters = gridRes.x * gridRes.y * gridRes.z;
+    if (clusterIdx >= totalClusters) return;
+
+    vec3 aabbMin = clusters[clusterIdx].minPoint.xyz;
+    vec3 aabbMax = clusters[clusterIdx].maxPoint.xyz;
+
+    // accumula gli indici delle luci visibili in questo cluster
+    uint localIndices[MAX_LIGHTS_PER_CLUSTER];
+    uint localCount = 0;
+
+    for (uint i = 0; i < lightCount && localCount < MAX_LIGHTS_PER_CLUSTER; i++)
+    {
+        // trasforma la posizione della luce in view space
+        vec3 lightViewPos = (view * vec4(lights[i].position, 1.0)).xyz;
+
+        if (sphereIntersectsAABB(lightViewPos, lights[i].radius, aabbMin, aabbMax))
+            localIndices[localCount++] = i;
+    }
+
+    // riserva spazio atomicamente nella lista globale
+    uint offset = atomicAdd(globalLightIndexCount, localCount);
+
+    // scrivi la light list
+    for (uint i = 0; i < localCount; i++)
+        lightIndexList[offset + i] = localIndices[i];
+
+    lightGrid[clusterIdx].offset = offset;
+    lightGrid[clusterIdx].count  = localCount;
+}
