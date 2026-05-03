@@ -198,7 +198,8 @@ int main()
         {
             accumulator -= FIXED_STEP;
         }
-		//scene.objects[0].transform.rotate({ 0.0f, 1.0f, 0.0f }, 20.0f * dt);
+		  
+        //scene.objects[0].transform.rotate({ 0.0f, 1.0f, 0.0f }, 20.0f * dt);
         scene.objects[0].transform.lerpSmooth(startPos, endPos, t);
         scene.objects[0].transform.slerpSmooth(startRot, endRot, t);
         scene.objects[4].transform.rotate({ 0.0f, 0.0f, 1.0f }, 90.0f * dt);
@@ -283,6 +284,7 @@ int main()
         glfwSwapBuffers(window);
     }
 
+    UIrenderer.shutdown();
     renderer.shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();

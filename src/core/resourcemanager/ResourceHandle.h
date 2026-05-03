@@ -5,6 +5,8 @@
 struct MeshTag {};
 struct TextureTag {};
 struct MaterialTag {};
+struct AudioClipTag {};
+struct AudioSourceTag {};
 
 template<typename Tag>
 struct ResourceHandle
@@ -27,6 +29,8 @@ struct ResourceHandle
 using MeshHandle = ResourceHandle<MeshTag>;
 using TextureHandle = ResourceHandle<TextureTag>;
 using MaterialHandle = ResourceHandle<MaterialTag>;
+using AudioClipHandle   = ResourceHandle<AudioClipTag>;
+using AudioSourceHandle = ResourceHandle<AudioSourceTag>;
 
 namespace std {
 	template<typename Tag>

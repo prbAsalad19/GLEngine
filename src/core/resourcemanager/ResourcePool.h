@@ -19,6 +19,18 @@ class ResourcePool
 	std::unordered_map<std::string, uint32_t> cache;
 
 public:
+	template<typename Func>
+	void forEach(Func&& fn)
+	{
+		for (auto& slot : slots)
+		{
+			if (slot.active)
+				fn(*slot.resource);
+		}
+	}
+
+	uint32_t size() const { return slots.size() - freeList.size(); }
+
 	explicit ResourcePool(uint32_t capacity = 64)
 	{
 		slots.resize(capacity);
