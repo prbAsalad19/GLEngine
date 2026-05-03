@@ -1,3 +1,4 @@
+#include "core/AudioPipeline/AudioClip.h"
 #include "core/CoreConfig.h"
 #include "core/math/algebricOp.h"
 #include "core/scene/Scene.h"
@@ -10,9 +11,11 @@
 #include "core/InputManager/InputManager.h"
 #include "core/scene/RenderContext.h"
 #include "core/scene/LightManager.h"
+#include "core/AudioPipeline/AudioEngine.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <memory>
 
 static GLFWwindow* createWindow(int width, int height, const char* title);
 
@@ -110,6 +113,10 @@ int main()
                             "shaders/gridGen.comp", "shaders/lightCulling.comp");
     renderer.init();
     std::cout << "[Main] 3D renderer initialized\n";
+
+    ResourcePool<AudioClipTag, AudioClip> audioClipPool;
+    AudioClip clip = AudioClip::load("assets/audio/test.wav");
+    AudioClipHandle clipHandle =  audioClipPool.insert("assets/audio/test.wav", std::make_unique<AudioClip>(clip));
 
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
