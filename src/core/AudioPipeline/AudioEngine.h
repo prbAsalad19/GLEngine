@@ -6,6 +6,8 @@
 #include "core/math/algebricOp.h"
 #include "IAudioBackend.h"
 
+constexpr float MIN_PAN = 0.2f;
+
 enum class AudioSourceType : uint32_t
 {
     Point = 0,
@@ -24,7 +26,7 @@ struct AudioSource
     bool            playing     = false;
 
     // internal state 
-    float           playhead    = 0.0f;  // position in frame (float for the resampling)
+    double           playhead    = 0.0f;  // position in frame (float for the resampling)
 };
 
 struct Listener
@@ -32,6 +34,7 @@ struct Listener
     Vector3 position;
     Vector3 forward;
     Vector3 up;
+    Vector3 velocity;
 };
 
 class AudioEngine
@@ -77,12 +80,20 @@ public:
     }
 
 private:
+
+    float calculateAttenuation(const AudioSource& source) const;
+    void calculatePanning(const AudioSource& source, float& outL, float& outR) const;
+    float calculateDoppler(const AudioSource& source) const;
+    float calculateOcclusion(const AudioSource& source) const;
+
+
     ResourcePool<AudioClipTag, AudioClip>& m_clipPool;
     ResourcePool<AudioSourceTag, AudioSource> m_audioSourcePool;
 
     std::unique_ptr<IAudioBackend> m_backend;
     std::vector<float>             m_mixBuffer;
     uint32_t                       m_bufferFrames = 1024;
+    float                          m_speedOfSound = 343.0f;
 
     Listener m_listener;
     float    m_timeAccumulator = 0.0f;

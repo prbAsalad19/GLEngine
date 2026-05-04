@@ -1,4 +1,6 @@
 #include "algebricOp.h"
+#include <cmath>
+#include <cstdlib>
 
 // ─────────────────────────────────────────────
 //  mat4
@@ -218,6 +220,16 @@ mat4 mat4::calculate_inverse_projection(float fovy, float aspect, float nearPlan
 //  Vector4
 // ─────────────────────────────────────────────
 
+float Vector4::mag(Vector4 u)
+{
+    return u.mag();
+}
+
+float Vector4::mag()
+{
+    return std::sqrt(x * x + y * y + z * z + w * w);
+}
+
 Vector4 Vector4::operator+(const Vector4& other) const
 {
     return {
@@ -273,6 +285,14 @@ Vector4 Vector4::normalize(Vector4 v)
     return v;
 }
 
+float Vector4::dist(Vector4 u, Vector4 v)
+{
+    return std::sqrtf(std::fabs(u.x - v.x) * std::fabs(u.x - v.x)
+                     + std::fabs(u.y -v.y) * std::fabs(u.y -v.y)
+                     + std::fabs(u.z -v.z) * std::fabs(u.z -v.z)
+                     + std::fabs(u.w - v.w) * std::fabs(u.w - v.w));
+}
+
 Vector4 Vector4::midpoint(Vector4 u, Vector4 v)
 {
     return{
@@ -306,6 +326,16 @@ Vector4 Vector4::Vmax(Vector4 u, Vector4 v)
 // ─────────────────────────────────────────────
 //  Vector3
 // ─────────────────────────────────────────────
+
+float Vector3::mag(Vector3 u)
+{
+    return u.mag();
+}
+
+float Vector3::mag()
+{
+    return std::sqrt(x * x + y * y + z * z);
+}
 
 Vector3 Vector3::operator+(const Vector3& other) const
 {
@@ -362,6 +392,13 @@ Vector3 Vector3::cross(Vector3 u, Vector3 v)
     };
 }
 
+float Vector3::dist(Vector3 u, Vector3 v)
+{
+    return std::sqrtf(std::fabs(u.x - v.x) * std::fabs(u.x - v.x)
+                     + std::fabs(u.y -v.y) * std::fabs(u.y -v.y)
+                     + std::fabs(u.z -v.z) * std::fabs(u.z -v.z));
+}
+
 Vector3 Vector3::midpoint(Vector3 u, Vector3 v)
 {
     return{
@@ -411,6 +448,16 @@ Vector3 Vector3::targetFromQuaternion(const Quaternion& q)
 //  Vector2
 // ─────────────────────────────────────────────
 
+float Vector2::mag(Vector2 u)
+{
+    return u.mag();
+}
+
+float Vector2::mag()
+{
+    return std::sqrt(x * x + y * y);
+}
+
 Vector2 Vector2::operator+(const Vector2& other) const
 {
     return {
@@ -451,6 +498,12 @@ Vector2 Vector2::normalize(Vector2 v)
 {
     v.normalize();
     return v;
+}
+
+float Vector2::dist(Vector2 u, Vector2 v)
+{
+    return std::sqrtf(std::fabs(u.x - v.x) * std::fabs(u.x - v.x)
+                     + std::fabs(u.y -v.y) * std::fabs(u.y -v.y));
 }
 
 // ─────────────────────────────────────────────

@@ -15,6 +15,9 @@ public:
 
     virtual bool isRunning() const = 0;
 
+    virtual uint32_t getAvailableWriteSpace() const = 0;
+    virtual uint32_t getCapacity() const = 0;
+
 private:
 
 };

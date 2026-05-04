@@ -6,8 +6,9 @@
 bool MiniaudioBackend::init(uint32_t sampleRate, uint32_t channels, uint32_t bufferSizeFrames)
 {
     m_bufferFrameCount = bufferSizeFrames;
-    m_writeIndex.store(0);
-    m_readIndex.store(0);
+    m_writeFrames.store(0);
+    m_readFrames.store(0);
+    memset(m_buffer, 0, sizeof(m_buffer));
 
     ma_device_config deviceConfig = ma_device_config_init(ma_device_type_playback);
     deviceConfig.playback.format   = ma_format_f32;
@@ -34,19 +35,22 @@ bool MiniaudioBackend::init(uint32_t sampleRate, uint32_t channels, uint32_t buf
 
 void MiniaudioBackend::submitBuffer(const float* data, uint32_t frameCount)
 {
-    if (!m_running || frameCount > m_bufferFrameCount) {
-        std::cerr << "Audio backend not running or frame count exceeds buffer size\n";
+    if (!m_running) {
         return;
     }
 
-    int writeIdx = m_writeIndex.load(std::memory_order_relaxed);
-    int nextWriteIdx = (writeIdx + 1) % NUM_BUFFERS;
+    uint32_t writeF = m_writeFrames.load(std::memory_order_relaxed);
+    uint32_t readF = m_readFrames.load(std::memory_order_acquire);
+    uint32_t available = CAPACITY - (writeF - readF);
     
-    // Check if the queue is full
-    if (nextWriteIdx != m_readIndex.load(std::memory_order_acquire))
+    if (available >= frameCount)
     {
-        memcpy(m_buffers[writeIdx], data, frameCount * 2 * sizeof(float));
-        m_writeIndex.store(nextWriteIdx, std::memory_order_release);
+        for(uint32_t i = 0; i < frameCount; ++i) {
+            uint32_t idx = (writeF + i) % CAPACITY;
+            m_buffer[idx * 2]     = data[i * 2];
+            m_buffer[idx * 2 + 1] = data[i * 2 + 1];
+        }
+        m_writeFrames.store(writeF + frameCount, std::memory_order_release);
     }
     else
     {
@@ -67,24 +71,25 @@ void MiniaudioBackend::dataCallback(ma_device* device, void* pOutput,
 {
     MiniaudioBackend* self = static_cast<MiniaudioBackend*>(device->pUserData);
     
-    uint32_t totalBytes = frameCount * 2 * sizeof(float);
+    uint32_t writeF = self->m_writeFrames.load(std::memory_order_acquire);
+    uint32_t readF = self->m_readFrames.load(std::memory_order_relaxed);
+    uint32_t available = writeF - readF;
     
-    int readIdx = self->m_readIndex.load(std::memory_order_relaxed);
-    if (readIdx != self->m_writeIndex.load(std::memory_order_acquire))
-    {
-        uint32_t framesToCopy = std::min(frameCount, self->m_bufferFrameCount);
-        uint32_t bytesToCopy  = framesToCopy * 2 * sizeof(float);
-        
-        memset(pOutput, 0, totalBytes); // Fill with silence first if we copy less
-        memcpy(pOutput, self->m_buffers[readIdx], bytesToCopy);
-        
-        self->m_readIndex.store((readIdx + 1) % NUM_BUFFERS, std::memory_order_release);
+    uint32_t framesToCopy = std::min((uint32_t)frameCount, available);
+    float* out = static_cast<float*>(pOutput);
+    
+    for(uint32_t i = 0; i < framesToCopy; ++i) {
+        uint32_t idx = (readF + i) % CAPACITY;
+        out[i * 2]     = self->m_buffer[idx * 2];
+        out[i * 2 + 1] = self->m_buffer[idx * 2 + 1];
     }
-    else
-    {
-        // Queue empty, output silence
-        memset(pOutput, 0, totalBytes);
+    
+    if (framesToCopy < frameCount) {
+        uint32_t remaining = frameCount - framesToCopy;
+        memset(out + framesToCopy * 2, 0, remaining * 2 * sizeof(float));
     }
+    
+    self->m_readFrames.store(readF + framesToCopy, std::memory_order_release);
 }
 
 bool MiniaudioBackend::isRunning() const

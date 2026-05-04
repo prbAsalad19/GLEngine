@@ -127,6 +127,7 @@ int main()
     listener.position = camera.position;
     listener.forward  = { 0.0f, 1.0f, 0.0f };
     listener.up       = { 0.0f, 0.0f, 1.0f };
+    listener.velocity = { 0.0f, 0.0f, 0.0f};
 
     AudioEngine audioEngine(listener, audioClipPool);
     audioEngine.init(std::make_unique<MiniaudioBackend>(), 900);
@@ -273,6 +274,8 @@ int main()
             Vector3 forward = Vector3::normalize(camera.target - camera.position);
             Vector3 worldUp = { 0.0f, 0.0f, 1.0f };
             Vector3 right = Vector3::normalize(Vector3::cross(forward, worldUp));
+            
+            listener.forward = forward;
 
             Vector3 moveDir = { 0.0f, 0.0f, 0.0f };
             float currentSpeed = moveSpeed * dt;
@@ -299,10 +302,14 @@ int main()
                 
                 camera.position = camera.position + displacement;
                 camera.target = camera.target + displacement; // Keep target relative to position
+
+                listener.position = camera.position;
+                float audioDt = std::min(dt, 0.1f);
+                listener.velocity = displacement * (1.0f / audioDt);
             }
         }
         //=================================================================================
-
+        audioEngine.setListener(listener);
         audioEngine.update(dt);
 
         dynamicBVH.update(dynamicSlowObjects);

@@ -25,9 +25,12 @@ public:
     Vector4 operator-(const Vector4& other) const;
     Vector4 operator*(float scalar) const;
 
+    static float   mag(Vector4 u);
+    float          mag();
     static float   dot(Vector4 u, Vector4 v);
     static Vector4 normalize(Vector4 v);
     void           normalize();
+    float          dist(Vector4 u, Vector4 v);
     static Vector4 midpoint(Vector4 u, Vector4 v);
     static Vector4 Vmin(Vector4 u, Vector4 v);
     static Vector4 Vmax(Vector4 u, Vector4 v);
@@ -50,9 +53,12 @@ public:
     Vector3 operator-(const Vector3& other) const;
 	Vector3 operator*(float scalar) const;
 
+    static float   mag(Vector3 u);
+    float          mag();
     static float   dot(Vector3 u, Vector3 v);
     static Vector3 normalize(Vector3 v);
     static Vector3 cross(Vector3 u, Vector3 v);
+    static float   dist(Vector3 u, Vector3 v);
     static Vector3 midpoint(Vector3 u, Vector3 v);
     static Vector3 Vmin(Vector3 u, Vector3 v);
     static Vector3 Vmax(Vector3 u, Vector3 v);
@@ -78,9 +84,12 @@ public:
     Vector2 operator-(const Vector2& other) const;
     Vector2 operator*(float scalar) const;
 
+    static float   mag(Vector2 u);
+    float          mag();
     static float   dot(Vector2 u, Vector2 v);
     static Vector2 normalize(Vector2 v);
     void           normalize();
+    float          dist(Vector2 u, Vector2 v);
 };
 
 // ─────────────────────────────────────────────
