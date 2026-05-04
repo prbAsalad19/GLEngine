@@ -1,5 +1,5 @@
 #pragma once
-#include "miniaudio.c"
+#include "miniaudio.h"
 #include "IAudioBackend.h"
 #include <atomic>
 
@@ -19,12 +19,12 @@ private:
     ma_device   m_device;
     bool        m_running = false;
 
-    // ping-pong
     static constexpr uint32_t MAX_FRAMES = 4096;
+    static constexpr uint32_t NUM_BUFFERS = 8;
 
-    // due buffer stereo — MAX_FRAMES frame * 2 canali
-    float                m_buffers[2][MAX_FRAMES * 2];
-    std::atomic<int>     m_frontIndex { 0 };
+    float                m_buffers[NUM_BUFFERS][MAX_FRAMES * 2];
+    std::atomic<int>     m_writeIndex { 0 };
+    std::atomic<int>     m_readIndex { 0 };
     uint32_t             m_bufferFrameCount { 0 };
 
     static void dataCallback(ma_device*  device,

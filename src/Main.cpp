@@ -12,6 +12,7 @@
 #include "core/scene/RenderContext.h"
 #include "core/scene/LightManager.h"
 #include "core/AudioPipeline/AudioEngine.h"
+#include "core/AudioPipeline/MiniaudioBackend.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -114,9 +115,32 @@ int main()
     renderer.init();
     std::cout << "[Main] 3D renderer initialized\n";
 
+
+
+    //audio system setup start ===================================
+
     ResourcePool<AudioClipTag, AudioClip> audioClipPool;
     AudioClip clip = AudioClip::load("assets/audio/test.wav");
     AudioClipHandle clipHandle =  audioClipPool.insert("assets/audio/test.wav", std::make_unique<AudioClip>(clip));
+
+    Listener listener;
+    listener.position = camera.position;
+    listener.forward  = { 0.0f, 1.0f, 0.0f };
+    listener.up       = { 0.0f, 0.0f, 1.0f };
+
+    AudioEngine audioEngine(listener, audioClipPool);
+    audioEngine.init(std::make_unique<MiniaudioBackend>(), 900);
+
+    AudioSourceHandle sourceHandle = audioEngine.createSource(
+        clipHandle,
+        { 0.0f, 0.0f, 0.0f },  // posizione
+        1.0f,                    // volume
+        true                     // looping
+    );
+
+    audioEngine.play(sourceHandle);
+
+    //audio system setup end ===================================
 
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
@@ -278,6 +302,8 @@ int main()
             }
         }
         //=================================================================================
+
+        audioEngine.update(dt);
 
         dynamicBVH.update(dynamicSlowObjects);
 

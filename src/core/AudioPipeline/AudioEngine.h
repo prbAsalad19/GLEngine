@@ -39,7 +39,13 @@ class AudioEngine
 public:
     AudioEngine(Listener listener, ResourcePool<AudioClipTag, AudioClip>& clipPool) : m_listener(listener), m_clipPool(clipPool) {}
 
-    void init(std::unique_ptr<IAudioBackend> backend, uint32_t bufferFrames);
+    void init(std::unique_ptr<IAudioBackend> backend, uint32_t bufferFrames)
+    {
+        m_bufferFrames = bufferFrames;
+        m_backend = std::move(backend);
+        m_mixBuffer.resize(m_bufferFrames * 2, 0.0f);
+        m_backend->init(48000, 2, bufferFrames);
+    }
 
     AudioSourceHandle createSource(const AudioClipHandle& clip,
                                 const Vector3& position = {0.0f, 0.0f, 0.0f},
@@ -51,7 +57,24 @@ public:
     void update(float deltaTime);
 
     void setListener(const Listener& listener) { m_listener = listener; }
-    
+
+    void play(AudioSourceHandle handle)
+    {
+        AudioSource* source = m_audioSourcePool.get(handle);
+        if (source) source->playing = true;
+    }
+
+    void stop(AudioSourceHandle handle)
+    {
+        AudioSource* source = m_audioSourcePool.get(handle);
+        if (source) { source->playing = false; source->playhead = 0.0f; }
+    }    
+
+    void pause(AudioSourceHandle handle)
+    {
+        AudioSource* source = m_audioSourcePool.get(handle);
+        if (source) source->playing = false;
+    }
 
 private:
     ResourcePool<AudioClipTag, AudioClip>& m_clipPool;
@@ -59,7 +82,8 @@ private:
 
     std::unique_ptr<IAudioBackend> m_backend;
     std::vector<float>             m_mixBuffer;
-    uint32_t                       m_bufferFrames;
+    uint32_t                       m_bufferFrames = 1024;
 
     Listener m_listener;
+    float    m_timeAccumulator = 0.0f;
 };
