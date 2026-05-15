@@ -131,10 +131,16 @@ void main()
         {
             L /= dist;
 
+            float spotAttenuation = 1.0;
+
+            
+            float cosAngle = dot(-L, normalize(light.direction));
+            spotAttenuation = smoothstep(light.outerAngleCos, light.innerAngleCos, cosAngle);
+                            
             vec3 H = normalize(V + L);
 
             float attenuation = pow(clamp(1.0 - (dist / light.radius), 0.0, 1.0), 2.0);
-            vec3 radiance = light.color * light.intensity * attenuation;
+            vec3 radiance = light.color * light.intensity * attenuation * spotAttenuation;
 
             float nDotL = max(dot(Normal, L), 0.0);
             vec3 diffuse = Albedo * nDotL;

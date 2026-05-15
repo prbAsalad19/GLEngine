@@ -50,3 +50,18 @@ bool Frustum::intersectsAABB(const AABB& aabb) const
     }
     return true;
 }
+
+bool Frustum::intersectsSphere(const Vector3 pos, const float radius) const
+{
+    for (const auto& p : planes)
+    {
+        float distance = p.x * pos.x + p.y * pos.y + p.z * pos.z + p.w;
+
+        if (distance < -radius)
+        {
+            return false;
+        }
+    }   
+
+    return true;
+}

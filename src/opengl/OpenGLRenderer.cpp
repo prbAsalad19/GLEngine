@@ -379,6 +379,12 @@ void OpenGLRenderer::lightingPass()
 
     m_lightingShader.bind();
     
+    if (m_debugModeLast != m_debugMode)
+    {
+        m_lightingShader.setInt("u_debugMode", m_debugMode);
+        m_debugModeLast = m_debugMode;
+    }
+
     // 3. Bind delle Texture dal GBuffer (usando i tuoi membri m_gBuffer)
     // Slot 0: Normals (RG16F)
     glActiveTexture(GL_TEXTURE0);
@@ -458,4 +464,9 @@ void OpenGLRenderer::setupGBuffer()
         GL_COLOR_ATTACHMENT2
     };
     glNamedFramebufferDrawBuffers(m_gBuffer.fbo, 3, attachments);
+}
+
+void OpenGLRenderer::setDebugMode(int mode)
+{
+    m_debugMode = mode;
 }

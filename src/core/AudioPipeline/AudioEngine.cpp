@@ -148,6 +148,15 @@ void AudioEngine::calculatePanning(const AudioSource& source, float& outL, float
 
 float AudioEngine::calculateDoppler(const AudioSource& source) const
 {
-    return (m_speedOfSound + Vector3::mag(m_listener.velocity)) 
-                        / (m_speedOfSound + Vector3::mag(source.velocity));    
+    Vector3 directDist = source.position - m_listener.position;
+    float distance = Vector3::mag(directDist);
+    if (distance < 0.0001f) return 1.0f; 
+
+    Vector3 direction = directDist * (1 / distance);
+    float vL = Vector3::dot(m_listener.velocity, direction);
+    float vS = Vector3::dot(source.velocity, direction);
+
+    float dopplerFactor = (m_speedOfSound + vL) / (m_speedOfSound - vS);
+
+    return std::max(0.1f, dopplerFactor);
 }

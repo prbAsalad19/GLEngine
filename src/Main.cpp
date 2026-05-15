@@ -94,7 +94,19 @@ int main()
     lightDesc.color = { 1.0f, 1.0f, 1.0f };
     lightDesc.intensity = 50.0f;
     lightDesc.radius = 10.0f;
-    lightManager.add(lightDesc);
+    lightDesc.type = LightType::Point;
+    //lightManager.add(lightDesc);
+
+    LightDesc lightDesc_;
+    lightDesc.position = { 0.0f, 0.0f, 5.0f };
+    lightDesc.color = { 1.0f, 1.0f, 1.0f };
+    lightDesc.intensity = 50.0f;
+    lightDesc.radius = 10.0f;
+    lightDesc.type = LightType::Spot;
+    lightDesc.innerAngle = 20.0f;
+    lightDesc.outerAngle = 30.0f;
+    lightDesc.direction = Vector3::normalize({ -1.0f, -0.2f, 0.0f});
+    lightManager.add(lightDesc_);
 
     Camera camera;
     camera.position = { -5.0f, 0.0f, 3.0f };
@@ -110,7 +122,7 @@ int main()
     float moveSpeed = 5.0f;
 
     OpenGLRenderer renderer(resources, "shaders/geometryPass.vert", "shaders/geometryPass.frag",
-                                    "shaders/lightingPass.vert", "shaders/lightingPass.frag",
+                                    "shaders/lightingPass.vert", "shaders/lightingPass_debug.frag",
                             "shaders/gridGen.comp", "shaders/lightCulling.comp");
     renderer.init();
     std::cout << "[Main] 3D renderer initialized\n";
@@ -308,6 +320,18 @@ int main()
                 listener.velocity = displacement * (1.0f / audioDt);
             }
         }
+
+        if (inputManager.isKeyPressed(GLFW_KEY_F1)) renderer.setDebugMode(0);
+        if (inputManager.isKeyPressed(GLFW_KEY_F2)) renderer.setDebugMode(1);
+        if (inputManager.isKeyPressed(GLFW_KEY_F3)) renderer.setDebugMode(2);
+        if (inputManager.isKeyPressed(GLFW_KEY_F4)) renderer.setDebugMode(3);
+        if (inputManager.isKeyPressed(GLFW_KEY_F5)) renderer.setDebugMode(4);
+        if (inputManager.isKeyPressed(GLFW_KEY_F6)) renderer.setDebugMode(5);
+        if (inputManager.isKeyPressed(GLFW_KEY_F7)) renderer.setDebugMode(6);
+        if (inputManager.isKeyPressed(GLFW_KEY_F8)) renderer.setDebugMode(7);
+        if (inputManager.isKeyPressed(GLFW_KEY_F9)) renderer.setDebugMode(8);
+
+
         //=================================================================================
         audioEngine.setListener(listener);
         audioEngine.update(dt);

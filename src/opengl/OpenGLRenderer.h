@@ -91,6 +91,7 @@ public:
             glfwSwapInterval(0);
     }
     
+    void setDebugMode(int mode);
 private:
     void geometryPass(const Scene& scene, 
                         const std::unordered_map<MeshHandle, 
@@ -108,6 +109,9 @@ private:
     OpenGLShaderProgram m_lightingShader;
     OpenGLShaderProgram m_clusterComputeShader;
     OpenGLShaderProgram m_lightCullingShader;
+
+    int m_debugMode = 0;
+    int m_debugModeLast = 0;
 
     bool m_clustersDirty = true;
 

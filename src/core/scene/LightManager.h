@@ -35,7 +35,8 @@ struct LightHandle
 enum class LightType : uint32_t
 {
     Point = 0,
-    Spot  = 1
+    Spot  = 1,
+    Directional = 2
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,6 +51,7 @@ struct LightDesc
     float     radius    = 10.0f;
 
     LightType type      = LightType::Point;
+    bool isPrimary = false; //only for directional lights, the other are ingnored in the making of shadows
 
     // Spot only — ignored for point lights
     Vector3   direction  = { 0.0f, -1.0f, 0.0f };
@@ -106,6 +108,8 @@ public:
 
     // Returns the contiguous GPU buffer — upload this to the SSBO.
     const std::vector<GPULight>& getGPULights() const { return m_gpuLights; }
+    const std::vector<bool>& getIsPrimary() const { return m_isPrimary; }
+    bool isPrimary(uint32_t gpuIndex) const { return m_isPrimary[gpuIndex]; }
 
     // Number of currently active lights.
     uint32_t count() const { return m_activeCount; }
@@ -133,6 +137,7 @@ private:
     std::vector<uint32_t> m_freeList;
 
     std::vector<GPULight> m_gpuLights;   // always contiguous, no holes
+    std::vector<bool> m_isPrimary;
     std::vector<GPUEntry> m_gpuToSlot;   // parallel to m_gpuLights
 
     uint32_t m_activeCount = 0;

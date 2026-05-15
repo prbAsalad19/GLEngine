@@ -61,6 +61,8 @@ public:
 
     void setListener(const Listener& listener) { m_listener = listener; }
 
+    void setListenerPos(const Vector3 pos) { m_listener.position = pos; }
+
     void play(AudioSourceHandle handle)
     {
         AudioSource* source = m_audioSourcePool.get(handle);
