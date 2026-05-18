@@ -5,7 +5,7 @@ markdown_extensions:
 - pymdownx.superfences
 - pymdownx.highlight
 - pymdownx.inlinehilite
-site_name: GLEngine API Docs
+site_name: AevumEngine API Docs
 theme:
   features:
   - navigation.sections

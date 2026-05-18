@@ -1,6 +1,6 @@
 # Resource System
 
-This document describes how GLEngine manages shared resources.
+This document describes how AevumEngine manages shared resources.
 
 Resources represent reusable assets used by multiple objects in the scene.
 

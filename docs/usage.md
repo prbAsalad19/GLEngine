@@ -1,4 +1,4 @@
-# GLEngine — Usage Guide
+# AevumEngine — Usage Guide
 
 This document describes how to use the engine systems in practice.
 

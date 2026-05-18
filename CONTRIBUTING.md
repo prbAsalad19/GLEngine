@@ -1,6 +1,6 @@
-# Contributing to GLEngine
+# Contributing to AevumEngine
 
-Thank you for your interest in contributing to GLEngine!
+Thank you for your interest in contributing to AevumEngine!
 
 ## Reporting Bugs
 

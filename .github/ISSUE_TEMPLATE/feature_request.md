@@ -17,7 +17,7 @@ assignees: ''
 
 ## Feature description
 
-Describe the feature you would like to see in GLEngine.
+Describe the feature you would like to see in AevumEngine.
 
 ## Motivation
 

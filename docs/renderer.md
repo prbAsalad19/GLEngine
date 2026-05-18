@@ -1,6 +1,6 @@
 # Renderer
 
-This document describes the renderer system used in GLEngine.
+This document describes the renderer system used in AevumEngine.
 
 The renderer is responsible for converting scene data into GPU draw calls and producing the final rendered image.
 

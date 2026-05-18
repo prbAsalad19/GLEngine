@@ -9,7 +9,7 @@ assignees: ''
 
 ---
 name: Bug report
-about: Report a bug in GLEngine
+about: Report a bug in AevumEngine
 title: ''
 labels: bug
 assignees: ''
@@ -39,7 +39,7 @@ If applicable, add screenshots or copy logs here.
 
 ## Environment
 
-- GLEngine version: 
+- AevumEngine version: 
 - OS: 
 - Compiler: 
 - Graphics API: OpenGL

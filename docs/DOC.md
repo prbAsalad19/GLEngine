@@ -1,4 +1,4 @@
-# 🛠 Project Atlas: GLEngine
+# 🛠 Project Atlas: AevumEngine
 
 > Generazione automatica intelligente. Naviga usando i link sottostanti.
 
@@ -69,17 +69,17 @@
 
 <a id="cmakeliststxt"></a>
 ## 📄 CMakeLists.txt
-### Titolo: Progetto GLEngine - Motorizzazione Grafica
+### Titolo: Progetto AevumEngine - Motorizzazione Grafica
 
 ### Overview:
-Il progetto GLEngine è un motore grafico scritto in C++ utilizzando la versione 20 del standard. Il progetto include funzionalità OpenGL e GLFW per gestire la finestra di visualizzazione e il rendering grafico.
+Il progetto AevumEngine è un motore grafico scritto in C++ utilizzando la versione 20 del standard. Il progetto include funzionalità OpenGL e GLFW per gestire la finestra di visualizzazione e il rendering grafico.
 
 ### Tabella Key Points:
 
 | **Classi/Funzioni/Config** | **Scopo** |
 |--------------------------|-----------|
 | `SOURCES`                | Raccolta di tutti i file sorgente del progetto. |
-| `GLEngine`               | Nome dell'eseguibile e del progetto. |
+| `AevumEngine`               | Nome dell'eseguibile e del progetto. |
 | `target_include_directories` | Specifica i percorsi degli header necessari. |
 | `find_package(OpenGL REQUIRED)` | Trova e carica la libreria OpenGL. |
 | `find_package(glfw3 REQUIRED)`  | Trova e carica la libreria GLFW. |

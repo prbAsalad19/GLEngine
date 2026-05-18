@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-GLEngine is currently an experimental project and does not maintain long-term supported versions.
+AevumEngine is currently an experimental project and does not maintain long-term supported versions.
 
 Security issues will be addressed on the latest version of the codebase.
 
@@ -29,6 +29,6 @@ Once a vulnerability is reported:
 
 ## Scope
 
-This policy applies to vulnerabilities affecting the GLEngine codebase.
+This policy applies to vulnerabilities affecting the AevumEngine codebase.
 
 General bugs or feature requests should be reported through the GitHub issue tracker.

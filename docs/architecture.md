@@ -1,6 +1,6 @@
-# GLEngine Architecture
+# AevumEngine Architecture
 
-This document describes the high-level architecture of GLEngine and the interaction between its main systems.
+This document describes the high-level architecture of AevumEngine and the interaction between its main systems.
 
 The goal of the engine is to maintain a **modular architecture** that allows the rendering backend and internal systems to evolve without requiring major rewrites.
 

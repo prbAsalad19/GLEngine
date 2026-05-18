@@ -1,6 +1,6 @@
-# GLEngine
+# AevumEngine
 
-GLEngine is a minimal modular rendering engine written in C++ using OpenGL.
+AevumEngine is a minimal modular rendering engine written in C++ using OpenGL.
 
 The project focuses on exploring **clean engine architecture** rather than building a full-featured engine.
 
