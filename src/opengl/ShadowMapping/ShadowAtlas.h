@@ -25,7 +25,7 @@ private:
 
     std::vector<Node> m_nodes;
 
-    
+    float borderColor[4] = {1.0f, 1.0f, 1.0f, 1.0f };
 
 public:
     uint32_t m_resolutions[4] =
@@ -40,7 +40,7 @@ public:
     GLuint fbo;
     uint32_t tileSize;
 
-
+    void init();
     // new implementation ===== ->
     Node getNode(uint32_t idx) { return m_nodes[idx]; };
     uint32_t addTile(uint32_t tileSize);
