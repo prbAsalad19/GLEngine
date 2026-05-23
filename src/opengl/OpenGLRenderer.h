@@ -7,6 +7,7 @@
 #include "core/scene/RenderCommand.h"
 #include "core/bvh/BVHTree.h"
 #include "core/scene/LightManager.h"
+#include "opengl/ShadowMapping/ShadowMapping.h"
 #include <unordered_map>
 
 static constexpr uint32_t MAX_RENDER_OBJECTS = 1024;
@@ -103,6 +104,7 @@ private:
 
 
     ResourceManager& m_resources;
+    ShadowEngine m_shadowEngine;
 
     // OpenGLShaderProgram m_shader;
     OpenGLShaderProgram m_geometryShader;

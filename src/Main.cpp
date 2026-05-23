@@ -52,6 +52,8 @@ int main()
     TextureHandle  texHandle = resources.loadTexture("img/whiteTexture.png");
     MaterialHandle matHandle = resources.loadMaterial(texHandle);
 
+    std::cout << "meshHandle slot: " << meshHandle.slot << "\n";
+
     Scene scene;
     //RenderObject obj;
     //obj.mesh = meshHandle;

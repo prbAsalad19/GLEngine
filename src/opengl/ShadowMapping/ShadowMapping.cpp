@@ -11,9 +11,9 @@ void ShadowEngine::init()
                          nullptr, GL_DYNAMIC_STORAGE_BIT);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, m_casterSSBO);
 
-    m_depthShader = new OpenGLShaderProgram(
-        "shaders/shadowPass.vert",
-        "shaders/shadowPass.frag");
+    m_depthShader = std::make_unique<OpenGLShaderProgram>(
+    "shaders/shadowPass.vert",
+    "shaders/shadowPass.frag");
 }
 
 void ShadowEngine::update(Frustum frustum, LightManager& lightManager, Camera camera)
@@ -131,6 +131,8 @@ void ShadowEngine::renderShadowPass(const Scene& scene, ResourceManager& resourc
 
     m_depthShader->bind();
 
+    if (!m_depthShader || m_casters.empty()) return;
+
     for (const auto& caster : m_casters)
     {
         // converti atlasRect UV → pixel
@@ -171,7 +173,7 @@ void ShadowEngine::bindForLightingPass(int atlasUnit) const
 void ShadowEngine::shutdown()
 {
     glDeleteBuffers(1, &m_casterSSBO);
-    delete m_depthShader;
+    m_depthShader.reset();
 }
 
 float ShadowEngine::getScreenImportance(float radius, float distance, float spotFactor)

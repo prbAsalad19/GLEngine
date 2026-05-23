@@ -32,5 +32,5 @@ private:
     GLuint m_casterSSBO = 0;
     bool   m_dirty      = false;
 
-    OpenGLShaderProgram* m_depthShader = nullptr;
+    std::unique_ptr<OpenGLShaderProgram> m_depthShader;
 };

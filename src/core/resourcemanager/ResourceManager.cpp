@@ -4,7 +4,11 @@
 const MeshHandle ResourceManager::loadMesh(const std::string& path)
 {
 	CPUMesh cpu;
-	if (!MeshLoader::loadOBJ(path, cpu)) return MeshHandle{};
+    if (!MeshLoader::loadOBJ(path, cpu))
+    {
+        std::cout << "[ResourceManager] Failed to load mesh: " << path << "\n";
+        return MeshHandle{};
+    }
 
 	    // debug
     // std::cout << "CPUMesh AABB min: " 

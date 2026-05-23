@@ -1,6 +1,7 @@
 #include "OpenGLRenderer.h"
 #include "core/assets/Material.h"
 #include "core/scene/RenderObject.h"
+#include "opengl/ShadowMapping/ShadowMapping.h"
 #include <vector>
 
 
@@ -106,6 +107,8 @@ void OpenGLRenderer::init()
     {
         std::cout << "[OpenGLRenderer] GBuffer not complete!\n";
     }
+
+    m_shadowEngine.init();
 }
 
 void OpenGLRenderer::shutdown()
@@ -121,6 +124,8 @@ void OpenGLRenderer::shutdown()
     glDeleteBuffers(1, &m_lightGridSSBO);
     glDeleteBuffers(1, &m_lightIndexListSSBO);  
     glDeleteVertexArrays(1, &m_fullscreenVAO);
+
+    m_shadowEngine.shutdown();
 }
 
 void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
@@ -265,6 +270,11 @@ void OpenGLRenderer::render(const Scene& scene,
 
     glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     
+    Frustum lightFrustum;
+    lightFrustum.extractFromMatrix(vp);
+    m_shadowEngine.update(lightFrustum, lightManager, camera);
+    m_shadowEngine.renderShadowPass(scene, m_resources);
+
     // ── geometry e lighting pass ──────────────────────────────────────────────
     geometryPass(scene, groups);
     lightingPass();
@@ -405,6 +415,10 @@ void OpenGLRenderer::lightingPass()
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, m_gBuffer.depth);
     m_lightingShader.setInt("u_gDepth", 3);
+
+
+    m_shadowEngine.bindForLightingPass(4);
+    m_lightingShader.setInt("u_shadowAtlas", 4);
 
     // 4. Binding degli SSBO per il Clustered Lighting
     // Usiamo i binding index definiti nella tua init()
