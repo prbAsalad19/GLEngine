@@ -28,6 +28,18 @@ struct LightHandle
     bool operator!=(const LightHandle& o) const { return !(*this == o); }
 };
 
+namespace std {
+    template<>
+    struct hash<LightHandle>
+    {
+        size_t operator()(const LightHandle& h) const noexcept
+        {
+            return std::hash<uint32_t>()(h.slot) ^ 
+                   (std::hash<uint32_t>()(h.generation) << 1);
+        }
+    };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  Light types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -95,6 +107,13 @@ static_assert(sizeof(GPULight) == 64, "GPULight must be 64 bytes for std430 alig
 class LightManager
 {
 public:
+    // Slot metadata for handle validation
+    struct Slot
+    {
+        uint32_t generation = 0;
+        bool     active     = false;
+        uint32_t gpuIndex   = UINT32_MAX;   // index into m_gpuLights
+    };
     explicit LightManager(uint32_t capacity = MAX_LIGHTS);
 
     // Add a light — returns a handle. Returns null handle if at capacity.
@@ -108,6 +127,8 @@ public:
 
     // Returns the contiguous GPU buffer — upload this to the SSBO.
     const std::vector<GPULight>& getGPULights() const { return m_gpuLights; }
+    const Slot& getSlot(LightHandle handle) const { return m_slots[handle.slot]; }
+    const std::vector<LightHandle>& getActiveHandles() const { return m_activeHandles; }
     const std::vector<bool>& getIsPrimary() const { return m_isPrimary; }
     bool isPrimary(uint32_t gpuIndex) const { return m_isPrimary[gpuIndex]; }
 
@@ -119,14 +140,6 @@ public:
     void clearDirty()       { m_dirty = false; }
 
 private:
-    // Slot metadata for handle validation
-    struct Slot
-    {
-        uint32_t generation = 0;
-        bool     active     = false;
-        uint32_t gpuIndex   = UINT32_MAX;   // index into m_gpuLights
-    };
-
     // Maps gpuIndex → slot index, for compact removal
     struct GPUEntry
     {
@@ -139,6 +152,7 @@ private:
     std::vector<GPULight> m_gpuLights;   // always contiguous, no holes
     std::vector<bool> m_isPrimary;
     std::vector<GPUEntry> m_gpuToSlot;   // parallel to m_gpuLights
+    std::vector<LightHandle> m_activeHandles;
 
     uint32_t m_activeCount = 0;
     bool     m_dirty       = false;

@@ -16,6 +16,7 @@ private:
         bool occupied;
     };
 
+public:
     struct Node
     {
         Tile tile;
@@ -23,6 +24,7 @@ private:
         int32_t children[4] = {-1, -1, -1, -1};
     };
 
+private:
     std::vector<Node> m_nodes;
 
     float borderColor[4] = {1.0f, 1.0f, 1.0f, 1.0f };

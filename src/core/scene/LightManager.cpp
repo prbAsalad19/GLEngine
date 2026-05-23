@@ -36,6 +36,7 @@ LightHandle LightManager::add(const LightDesc& desc)
     ++m_activeCount;
     m_dirty = true;
 
+    m_activeHandles.push_back(LightHandle(s, m_slots[s].generation));
     return LightHandle(s, m_slots[s].generation);
 }
 
@@ -83,6 +84,11 @@ void LightManager::remove(LightHandle handle)
     m_freeList.push_back(s);
     --m_activeCount;
     m_dirty = true;
+
+    m_activeHandles.erase(
+    std::remove_if(m_activeHandles.begin(), m_activeHandles.end(),
+        [&](const LightHandle& h) { return h.slot == s; }),
+    m_activeHandles.end());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
