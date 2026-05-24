@@ -418,7 +418,7 @@ void OpenGLRenderer::lightingPass()
 
 
     m_shadowEngine.bindForLightingPass(4);
-    m_lightingShader.setInt("u_shadowAtlas", 4);
+    m_lightingShader.setInt("u_shadowAtlas", 6);
 
     // 4. Binding degli SSBO per il Clustered Lighting
     // Usiamo i binding index definiti nella tua init()

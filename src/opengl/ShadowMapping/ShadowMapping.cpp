@@ -1,14 +1,18 @@
 #include "ShadowMapping.h"
 #include "core/scene/Frustum.h"
+#include "core/scene/LightManager.h"
 #include <iostream>
 
 void ShadowEngine::init()
 {
     m_shadowAtlas.init();
 
+    m_casters.reserve(MAX_LIGHTS);
+
+    constexpr size_t SSBO_SIZE = 16 + sizeof(GPUShadowCaster) * MAX_LIGHTS;
+
     glCreateBuffers(1, &m_casterSSBO);
-    glNamedBufferStorage(m_casterSSBO, sizeof(GPUShadowCaster) * MAX_LIGHTS,
-                         nullptr, GL_DYNAMIC_STORAGE_BIT);
+    glNamedBufferStorage(m_casterSSBO, SSBO_SIZE, nullptr, GL_DYNAMIC_STORAGE_BIT);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, m_casterSSBO);
 
     m_depthShader = std::make_unique<OpenGLShaderProgram>(
@@ -108,9 +112,9 @@ void ShadowEngine::update(Frustum frustum, LightManager& lightManager, Camera ca
 
     if (m_dirty)
     {
-        glNamedBufferSubData(m_casterSSBO, 0,
-            sizeof(GPUShadowCaster) * m_casters.size(),
-            m_casters.data());
+        uint32_t count = static_cast<uint32_t>(m_casters.size());
+        glNamedBufferSubData(m_casterSSBO, 0, sizeof(uint32_t), &count);
+        glNamedBufferSubData(m_casterSSBO, 16, sizeof(GPUShadowCaster) * count, m_casters.data());
         m_dirty = false;
     }
 }
@@ -169,7 +173,6 @@ void ShadowEngine::bindForLightingPass(int atlasUnit) const
     glBindTexture(GL_TEXTURE_2D, m_shadowAtlas.texture);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, m_casterSSBO);
 }
-
 void ShadowEngine::shutdown()
 {
     glDeleteBuffers(1, &m_casterSSBO);

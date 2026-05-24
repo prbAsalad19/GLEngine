@@ -15,6 +15,7 @@ struct GPUShadowCaster
     mat4     lightSpaceMatrix;  // 64 byte
     float    atlasRect[4];      // x, y, w, h in UV — 16 byte
     uint32_t lightIndex;        // quale luce — 4 byte
-    float    bias;              // 4 byte
-    float    _pad[2];           // 8 byte — totale 96 byte
+    float    bias;
+    float    _pad1;              // 4 byte
+    float    _pad2;           // 8 byte — totale 96 byte
 };

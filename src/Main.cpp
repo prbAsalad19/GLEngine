@@ -1,6 +1,7 @@
 #include "core/AudioPipeline/AudioClip.h"
 #include "core/CoreConfig.h"
 #include "core/math/algebricOp.h"
+#include "core/scene/RenderObject.h"
 #include "core/scene/Scene.h"
 #include "core/assets/Camera.h"
 #include "core/resourcemanager/ResourceManager.h"
@@ -51,6 +52,7 @@ int main()
     MeshHandle     meshHandle = resources.loadMesh("assets/teapot_with_uv.obj");
     TextureHandle  texHandle = resources.loadTexture("img/whiteTexture.png");
     MaterialHandle matHandle = resources.loadMaterial(texHandle);
+    MeshHandle     planeMeshHandle = resources.loadMesh("assets/plane.obj");
 
     std::cout << "meshHandle slot: " << meshHandle.slot << "\n";
 
@@ -83,6 +85,14 @@ int main()
         }
     }
 
+    RenderObject plane;
+    plane.mesh = planeMeshHandle;
+    plane.material = matHandle;
+    plane.transform.position = { 0.0f, 0.0f, -1.0f };
+    plane.transform.scale = { 10.0f, 10.0f, 10.0f };
+    plane.transform.setEuler( { 0.0f, 0.0f, 0.0f } );
+    scene.objects.push_back(plane);
+
     float t = 0.0f;
 
 
@@ -100,14 +110,14 @@ int main()
     //lightManager.add(lightDesc);
 
     LightDesc lightDesc_;
-    lightDesc.position = { 0.0f, 0.0f, 5.0f };
+    lightDesc.position = { -2.0f, 0.0f, 0.0f };
     lightDesc.color = { 1.0f, 1.0f, 1.0f };
     lightDesc.intensity = 50.0f;
     lightDesc.radius = 10.0f;
     lightDesc.type = LightType::Spot;
     lightDesc.innerAngle = 20.0f;
     lightDesc.outerAngle = 30.0f;
-    lightDesc.direction = Vector3::normalize({ -1.0f, -0.2f, 0.0f});
+    lightDesc.direction = Vector3::normalize({ 0.0f, 0.0f, 0.0f});
     lightManager.add(lightDesc_);
 
     Camera camera;
