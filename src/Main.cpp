@@ -228,6 +228,13 @@ int main()
         }
     }
 
+    std::cout << "staticObjects: " << staticObjects.size() << "\n";
+std::cout << "plane mesh slot: " << plane.mesh.slot << "\n";
+
+AABB planeAABB = resources.getMeshAABB(planeMeshHandle);
+std::cout << "plane AABB min: " << planeAABB.bounds[0].x << " " << planeAABB.bounds[0].y << " " << planeAABB.bounds[0].z << "\n";
+std::cout << "plane AABB max: " << planeAABB.bounds[1].x << " " << planeAABB.bounds[1].y << " " << planeAABB.bounds[1].z << "\n";
+
     BVHTree staticBVH    (resources, BVHType::Static);
     BVHTree quasiStaticBVH (resources, BVHType::QuasiStatic);
     BVHTree dynamicBVH   (resources, BVHType::DynamicSlow);

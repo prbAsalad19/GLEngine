@@ -45,7 +45,8 @@ OpenGLMesh* ResourceManager::getMesh(MeshHandle handle)
 
 AABB ResourceManager::getMeshAABB(MeshHandle handle)
 {
-	return meshPool.get(handle)->aabb;
+    AABB aabb = meshPool.get(handle)->aabb;
+    return aabb.expanded(0.001f);
 }
 
 void ResourceManager::deleteMesh(MeshHandle handle)
