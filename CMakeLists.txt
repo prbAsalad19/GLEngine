@@ -5,6 +5,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 list(APPEND SOURCES "src/opengl/glad.c")
+list(APPEND SOURCES "src/core/ecs/flecs.c")
+
+set_source_files_properties(
+    "src/core/ecs/flecs.c"
+    PROPERTIES LANGUAGE C
+)
 
 add_executable(AevumEngine ${SOURCES})
 

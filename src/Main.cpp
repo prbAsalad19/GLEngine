@@ -14,6 +14,7 @@
 #include "core/scene/LightManager.h"
 #include "core/AudioPipeline/AudioEngine.h"
 #include "core/AudioPipeline/MiniaudioBackend.h"
+#include "core/ecs/EcsSystem.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -49,49 +50,48 @@ int main()
     ResourceManager resources;
     LightManager lightManager;
 
+    flecs::world world;
+    registerComponents(world);
+
+    world.set<ResourceManagerSingleton>({ &resources});
+    world.set<LightManagerSingleton>({ &lightManager });
+
     MeshHandle     meshHandle = resources.loadMesh("assets/teapot_with_uv.obj");
     TextureHandle  texHandle = resources.loadTexture("img/whiteTexture.png");
     MaterialHandle matHandle = resources.loadMaterial(texHandle);
     MeshHandle     planeMeshHandle = resources.loadMesh("assets/plane.obj");
 
-    std::cout << "meshHandle slot: " << meshHandle.slot << "\n";
 
-    Scene scene;
-    //RenderObject obj;
-    //obj.mesh = meshHandle;
-    //obj.material = matHandle;
-    //obj.transform.position = { -0.5f, 0.0f, -0.5f }; 
-    //obj.transform.setEuler({-135.0f, 0.0f, 90.0f});
-    //obj.transform.scale = { 0.5f, 0.5f, 0.5f };
-    //scene.objects.push_back(obj);
-    // 9 teiere in griglia 3x3
 
-    std::vector<RenderObject> staticObjects;
-    std::vector<RenderObject> quasiStaticObjects;
-    std::vector<RenderObject> dynamicSlowObjects;
-    std::vector<RenderObject> dynamicFastObjects;
 
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            RenderObject obj;
-            obj.mesh = meshHandle;
-            obj.material = matHandle;
-            obj.transform.position = { i * 4.0f - 4.0f, j * 4.0f - 4.0f, 0.0f };
-            obj.transform.scale = { 0.5f, 0.5f, 0.5f };
-			obj.transform.setEuler({ 90.0f, 0.0f, 90.0f });
-            scene.objects.push_back(obj);
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            Transform t;
+            t.position = { i * 4.0f - 4.0f, j * 4.0f - 4.0f, 0.0f };
+            t.scale = { 0.5f, 0.5f, 0.5f };
+            t.setEuler({ 90.0f, 0.0f, 90.0f });
+
+            world.entity()
+                .set<TransformComponent>({ t })
+                .set<MeshComponent>({ meshHandle })
+                .set<MaterialComponent>({ matHandle })
+                .add<StaticTag>();
         }
     }
 
-    RenderObject plane;
-    plane.mesh = planeMeshHandle;
-    plane.material = matHandle;
-    plane.transform.position = { 0.0f, 0.0f, -1.0f };
-    plane.transform.scale = { 10.0f, 10.0f, 10.0f };
-    plane.transform.setEuler( { 0.0f, 0.0f, 0.0f } );
-    scene.objects.push_back(plane);
+    {
+        Transform t;
+        t.position = { 0.0f, 0.0f, -1.0f };
+        t.scale = { 10.0f, 10.0f, 10.0f };
+        t.setEuler( { 0.0f, 0.0f, 0.0f } );
+
+        world.entity()
+                .set<TransformComponent>({ t })
+                .set<MeshComponent>({ meshHandle })
+                .set<MaterialComponent>({ matHandle })
+                .add<StaticTag>();
+    }
+    
 
     float t = 0.0f;
 
@@ -139,7 +139,7 @@ int main()
     renderer.init();
     std::cout << "[Main] 3D renderer initialized\n";
 
-
+    world.set<CameraComponent>({ camera }); //setting up the camera in the ecs system
 
     //audio system setup start ===================================
 
@@ -164,6 +164,9 @@ int main()
     );
 
     audioEngine.play(sourceHandle);
+
+
+    world.set<AudioEngineSingleton>({ &audioEngine }); //setting up the engine in the ecs system
 
     //audio system setup end ===================================
 
@@ -216,24 +219,28 @@ int main()
     // }
 
     // build bvh
-    scene.objects[4].tier = ObjectTier::QuasiStatic;
-    for (const auto& obj : scene.objects)
+    // fuori dal loop — solo per il BVH build iniziale
+    std::vector<RenderObject> staticObjects;
+    std::vector<RenderObject> quasiStaticObjects;
+    std::vector<RenderObject> dynamicSlowObjects;
+    std::vector<RenderObject> dynamicFastObjects;
+
+    // query per popolarli prima del build
+    world.each([&](flecs::entity e,
+                TransformComponent& t,
+                MeshComponent& m,
+                MaterialComponent& mat)
     {
-        switch (obj.tier)
-        {
-            case ObjectTier::Static:      staticObjects.push_back(obj);      break;
-            case ObjectTier::QuasiStatic: quasiStaticObjects.push_back(obj); break;
-            case ObjectTier::DynamicSlow: dynamicSlowObjects.push_back(obj); break;
-            case ObjectTier::DynamicFast: dynamicFastObjects.push_back(obj); break;
-        }
-    }
+        RenderObject obj;
+        obj.mesh = m.handle;
+        obj.material = mat.handle;
+        obj.transform = t.transform;
 
-    std::cout << "staticObjects: " << staticObjects.size() << "\n";
-std::cout << "plane mesh slot: " << plane.mesh.slot << "\n";
-
-AABB planeAABB = resources.getMeshAABB(planeMeshHandle);
-std::cout << "plane AABB min: " << planeAABB.bounds[0].x << " " << planeAABB.bounds[0].y << " " << planeAABB.bounds[0].z << "\n";
-std::cout << "plane AABB max: " << planeAABB.bounds[1].x << " " << planeAABB.bounds[1].y << " " << planeAABB.bounds[1].z << "\n";
+        if      (e.has<StaticTag>())      staticObjects.push_back(obj);
+        else if (e.has<QuasiStaticTag>()) quasiStaticObjects.push_back(obj);
+        else if (e.has<DynamicSlowTag>()) dynamicSlowObjects.push_back(obj);
+        else if (e.has<DynamicFastTag>()) dynamicFastObjects.push_back(obj);
+    });
 
     BVHTree staticBVH    (resources, BVHType::Static);
     BVHTree quasiStaticBVH (resources, BVHType::QuasiStatic);
@@ -261,11 +268,6 @@ std::cout << "plane AABB max: " << planeAABB.bounds[1].x << " " << planeAABB.bou
         {
             accumulator -= FIXED_STEP;
         }
-		  
-        //scene.objects[0].transform.rotate({ 0.0f, 1.0f, 0.0f }, 20.0f * dt);
-        scene.objects[0].transform.lerpSmooth(startPos, endPos, t);
-        scene.objects[0].transform.slerpSmooth(startRot, endRot, t);
-        scene.objects[4].transform.rotate({ 0.0f, 0.0f, 1.0f }, 90.0f * dt);
 
         glfwPollEvents();
         inputManager.update();
@@ -355,7 +357,31 @@ std::cout << "plane AABB max: " << planeAABB.bounds[1].x << " " << planeAABB.bou
         audioEngine.setListener(listener);
         audioEngine.update(dt);
 
-        dynamicBVH.update(dynamicSlowObjects);
+        world.set<CameraComponent>( { camera });
+
+        std::vector<RenderObject> staticObjects;
+        std::vector<RenderObject> quasiStaticObjects;
+        std::vector<RenderObject> dynamicSlowObjects;
+        std::vector<RenderObject> dynamicFastObjects;
+
+        Scene scene;
+        world.each([&](flecs::entity e,
+                    TransformComponent& t,
+                    MeshComponent& m,
+                    MaterialComponent& mat)
+        {
+            RenderObject obj;
+            obj.mesh = m.handle;
+            obj.material = mat.handle;
+            obj.transform = t.transform;
+
+            if      (e.has<StaticTag>())      staticObjects.push_back(obj);
+            else if (e.has<QuasiStaticTag>()) quasiStaticObjects.push_back(obj);
+            else if (e.has<DynamicSlowTag>()) dynamicSlowObjects.push_back(obj);
+            else if (e.has<DynamicFastTag>()) dynamicFastObjects.push_back(obj);
+
+            scene.objects.push_back(obj);
+        });
 
         renderer.render(scene, lightManager, 
                 staticObjects, 
@@ -363,12 +389,15 @@ std::cout << "plane AABB max: " << planeAABB.bounds[1].x << " " << planeAABB.bou
                 dynamicSlowObjects, 
                 camera, staticBVH, quasiStaticBVH, dynamicBVH, dynamicFastObjects);
 
+
+        dynamicBVH.update(dynamicSlowObjects);
         UIrenderer.render(canvas);
         glfwSwapBuffers(window);
     }
 
     UIrenderer.shutdown();
     renderer.shutdown();
+    
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
