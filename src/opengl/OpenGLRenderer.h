@@ -86,6 +86,7 @@ public:
     
     void enVsync(bool enabled)
     {
+        m_vsyncEnabled = enabled;
         if (enabled)
             glfwSwapInterval(1);
         else
@@ -93,6 +94,32 @@ public:
     }
     
     void setDebugMode(int mode);
+
+    size_t getVisibleCount() { return _visibleIndices; }
+
+    float fps;
+    float dt;
+
+    // --- GETTER PER IL PANEL IMGUI ---
+    unsigned int getGBufferWidth() const { return m_width; }
+    unsigned int getGBufferHeight() const { return m_height; }
+
+    GLuint getGBufferNormalTexID() const { return m_gBuffer.normal; }    
+    GLuint getGBufferAlbedoTexID() const { return m_gBuffer.albedo; }
+    GLuint getGBufferMaterialTexID() const { return m_gBuffer.material; }
+    GLuint getGBufferDepthTexID() const { return m_gBuffer.depth; }
+
+    int getDebugMode() const { return m_debugMode; }
+
+    uint32_t getDrawCalls() const { return m_drawCalls; }
+    uint32_t getDrawnTriangles() const { return m_drawnTriangles; }
+    uint32_t getVisibleObjects() const { return static_cast<uint32_t>(_visibleIndices); }
+    uint32_t getTotalObjects() const { return m_totalObjectsThisFrame; }
+
+    bool isVsyncEnabled() const { return m_vsyncEnabled; }
+    bool isFrustumCullingEnabled() const { return m_frustumCullingEnabled; }
+    void setFrustumCullingEnabled(bool enabled) { m_frustumCullingEnabled = enabled; }
+
 private:
     void geometryPass(const Scene& scene, 
                         const std::unordered_map<MeshHandle, 
@@ -122,6 +149,8 @@ private:
     unsigned int        m_width = 1280;
     unsigned int        m_height = 720;
 
+    size_t _visibleIndices;
+
     GLuint m_fullscreenVAO;
 
 	GLuint m_cameraUBO;
@@ -135,4 +164,14 @@ private:
     GLuint m_globalCounterSSBO;
 
 	mat4 m_transformStagingBuffer[MAX_RENDER_OBJECTS];
+
+    // --- NUOVI MEMBRI PER STATISTICHE E CONTROLLI ---
+    uint32_t m_drawCalls = 0;
+    uint32_t m_drawnTriangles = 0;
+    uint32_t m_totalObjectsThisFrame = 0;
+    
+    GLuint m_primitivesQuery = 0; // Per il conteggio dei triangoli via GPU
+
+    bool m_vsyncEnabled = true;   // Di default di solito è attivo
+    bool m_frustumCullingEnabled = true;
 };

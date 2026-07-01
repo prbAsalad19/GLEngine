@@ -29,6 +29,7 @@ public:
                 AudioEngine& audioEngine,
                 OpenGLRenderer& renderer,
                 const BVHTree& staticBVH,
+                const BVHTree& quasistaticBVH,
                 const BVHTree& dynamicBVH);
 
     void onResize(uint32_t width, uint32_t height)
@@ -40,7 +41,7 @@ public:
 private:
     void drawCameraPanel(Camera& camera);
     void drawLightPanel(LightManager& lightManager);
-    void drawBVHPanel(const BVHTree& staticBVH, const BVHTree& dynamicBVH);
+    void drawBVHPanel(const BVHTree& staticBVH, const BVHTree& quasiStaticBVH, const BVHTree& dynamicBVH, const size_t visibleIndicesSize);
     void drawAudioPanel(AudioEngine& audioEngine);
     void drawRendererPanel(OpenGLRenderer& renderer);
     void drawMatrix4x4(const mat4& m);

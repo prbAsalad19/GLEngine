@@ -410,14 +410,20 @@ int main()
                 quasiStaticObjects, 
                 dynamicSlowObjects, 
                 camera, staticBVH, quasiStaticBVH, dynamicBVH, dynamicFastObjects);
-
+        renderer.fps = fpsCount;
+        renderer.dt = dt;
 
         dynamicBVH.update(dynamicSlowObjects);
         UIrenderer.render(canvas);
 
 #ifdef ENGINE_DEBUG_UI
         debugPanel.beginFrame();
-        debugPanel.render(camera, lightManager, audioEngine, renderer, staticBVH, dynamicBVH);
+        debugPanel.render(camera, 
+                lightManager, 
+                audioEngine, 
+                renderer, 
+                staticBVH, quasiStaticBVH, dynamicBVH);
+
         debugPanel.endFrame();
 #endif
 

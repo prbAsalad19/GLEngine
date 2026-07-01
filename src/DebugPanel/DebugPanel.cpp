@@ -37,6 +37,7 @@ void DebugPanel::render(Camera& camera,
                 AudioEngine& audioEngine,
                 OpenGLRenderer& renderer,
                 const BVHTree& staticBVH,
+                const BVHTree& quasiStaticBVH,
                 const BVHTree& dynamicBVH)
 {
     ImGui::Begin("Debug Panel");
@@ -55,7 +56,8 @@ void DebugPanel::render(Camera& camera,
         }
         if (ImGui::BeginTabItem("BVH"))
         {
-            drawBVHPanel(staticBVH, dynamicBVH);
+            size_t visCount = renderer.getVisibleCount();
+            drawBVHPanel(staticBVH, quasiStaticBVH, dynamicBVH, visCount);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Audio"))
@@ -169,9 +171,19 @@ void DebugPanel::drawMatrix4x4(const mat4& m)
     }
 }
 
-void DebugPanel::drawBVHPanel(const BVHTree& staticBVH, const BVHTree& dynamicBVH)
+void DebugPanel::drawBVHPanel(const BVHTree& staticBVH, const BVHTree& quasiStaticBVH, const BVHTree& dynamicBVH, const size_t visibleIndicesSize)
 {
-    return;
+    ImGui::SeparatorText("Nodes info");
+    ImGui::LabelText("static", "%zu", staticBVH.getNodes().size());
+    ImGui::LabelText("quasiynamic", "%zu", quasiStaticBVH.getNodes().size());
+    ImGui::LabelText("dynamic", "%zu", dynamicBVH.getNodes().size());
+    ImGui::SeparatorText("BVH Info");
+    std::string bvhInfo = std::to_string(visibleIndicesSize) 
+                                        + "/" 
+                                        + std::to_string(staticBVH.getNodes().size() 
+                                                        + quasiStaticBVH.getNodes().size() 
+                                                        + dynamicBVH.getNodes().size());
+    ImGui::LabelText("Visible nodes", "%s", bvhInfo.c_str()); 
 }
 void DebugPanel::drawAudioPanel(AudioEngine& audioEngine)
 {
@@ -209,7 +221,214 @@ void DebugPanel::drawAudioPanel(AudioEngine& audioEngine)
 }
 void DebugPanel::drawRendererPanel(OpenGLRenderer& renderer)
 {
-    return;
+// ==========================================
+    // 1. GPU INFO
+    // ==========================================
+    if (ImGui::CollapsingHeader("GPU Info", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // Info stringhe (ottenibili tramite glGetString)
+        ImGui::Text("Vendor: %s", glGetString(GL_VENDOR));
+        ImGui::Text("Renderer: %s", glGetString(GL_RENDERER));
+        ImGui::Text("OpenGL Version: %s", glGetString(GL_VERSION));
+        
+        ImGui::Separator();
+        
+        // Limiti Hardware
+        GLint maxUboSize = 0, maxSsboSize = 0;
+        glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUboSize);
+        glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &maxSsboSize);
+        ImGui::Text("Max UBO Size: %.2f KB", maxUboSize / 1024.0f);
+        ImGui::Text("Max SSBO Size: %.2f MB", maxSsboSize / (1024.0f * 1024.0f));
+
+        // Memoria NVIDIA (Opzionale/Condizionale)
+        // Nota: Definisci questi enum se non sono presenti negli header standard
+        #define GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX 0x9048
+        #define GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX 0x9049
+        
+        GLint totalMem = 0, availMem = 0;
+        glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX, &totalMem);
+        glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &availMem);
+        
+        if (totalMem > 0) // Se l'estensione è supportata ed è NVIDIA
+        {
+            ImGui::Separator();
+            ImGui::Text("VRAM Totale: %.2f MB", totalMem / 1024.0f);
+            ImGui::Text("VRAM Disponibile: %.2f MB", availMem / 1024.0f);
+            ImGui::Text("VRAM Utilizzata: %.2f MB", (totalMem - availMem) / 1024.0f);
+        }
+    }
+
+    // ==========================================
+    // 2. FRAME STATS & CULLING
+    // ==========================================
+    if (ImGui::CollapsingHeader("Frame Stats", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // Stats base passate o lette dal renderer
+        float fps = renderer.fps; // Sostituisci con la tua logica
+        float dtMs = renderer.dt * 1000.0f;
+        
+        ImGui::Text("Performance: %.1f FPS (%.2f ms)", fps, dtMs);
+        ImGui::Separator();
+        
+        // Contatori geometrici
+        ImGui::Text("Draw Calls: %d", renderer.getDrawCalls());
+        ImGui::Text("Triangoli Generati: %d", renderer.getDrawnTriangles()); // Se usi GL_PRIMITIVES_GENERATED
+        
+        ImGui::Separator();
+        
+        // Scena e Culling
+        int totalObjects = renderer.getTotalObjects();
+        int visibleObjects = renderer.getVisibleObjects();
+        int culledObjects = totalObjects - visibleObjects;
+        
+        ImGui::Text("Oggetti in Scena: %d", totalObjects);
+        ImGui::Text("Oggetti Visibili (BVH): %d", visibleObjects);
+        ImGui::Text("Oggetti Culled: %d (%.1f%%)", culledObjects, totalObjects > 0 ? (culledObjects / (float)totalObjects) * 100.0f : 0.0f);
+    }
+
+    // ==========================================
+    // 3. GBUFFER PREVIEW
+    // ==========================================
+    if (ImGui::CollapsingHeader("GBuffer Info & Previews"))
+    {
+        // Info Generiche
+        ImGui::Text("Risoluzione GBuffer: %dx%d", renderer.getGBufferWidth(), renderer.getGBufferHeight());
+        ImGui::Text("Formati: Albedo (RGBA8) | Normals (RG16F) | Material (RGBA8) | Depth (D24)");
+        
+        ImGui::Spacing();
+        
+        // Layout a griglia per le miniature delle texture
+        ImVec2 previewSize(320, 180); // 16:9 proporzionale
+        
+        ImVec2 uv0(0.0f, 1.0f);
+        ImVec2 uv1(1.0f, 0.0f);
+
+        if (ImGui::TreeNode("Previews"))
+        {
+            // Riga 1: Albedo e Normals
+            ImGui::BeginGroup();
+            ImGui::Text("Albedo");
+            ImGui::Image((ImTextureID)(intptr_t)renderer.getGBufferAlbedoTexID(), previewSize, uv0, uv1);
+            ImGui::EndGroup();
+            
+            ImGui::SameLine();
+            
+            ImGui::BeginGroup();
+            ImGui::Text("Normals (Ottaedrica)");
+            ImGui::Image((ImTextureID)(intptr_t)renderer.getGBufferNormalTexID(), previewSize, uv0, uv1);
+            ImGui::EndGroup();
+            
+            // Riga 2: Depth e Material
+            ImGui::BeginGroup();
+            ImGui::Text("Depth");
+            ImGui::Image((ImTextureID)(intptr_t)renderer.getGBufferDepthTexID(), previewSize, uv0, uv1);
+            ImGui::EndGroup();
+            
+            ImGui::SameLine();
+            
+            ImGui::BeginGroup();
+            ImGui::Text("Material (R/M/AO)");
+            ImGui::Image((ImTextureID)(intptr_t)renderer.getGBufferMaterialTexID(), previewSize, uv0, uv1);
+            ImGui::EndGroup();
+            
+            ImGui::TreePop();
+        }
+    }
+
+    // ==========================================
+    // 4. CLUSTER GRID
+    // ==========================================
+    if (ImGui::CollapsingHeader("Cluster Grid"))
+    {
+        // Costanti esposte
+        ImGui::Text("Dimensioni Griglia: %d x %d x %d", CLUSTERS_X, CLUSTERS_Y, CLUSTERS_Z);
+        ImGui::Text("Totale Cluster: %d", TOTAL_CLUSTERS);
+        
+        // ImGui::Separator();
+        // // Qui potrai mettere info avanzate estratte dalla GPU in futuro
+        // ImGui::Text("Luci totali attive (LightManager): %d", lightManager.count());
+    }
+
+    // ==========================================
+    // 5. SHADOW ENGINE
+    // ==========================================
+    if (ImGui::CollapsingHeader("Shadow Engine"))
+    {
+        // ImGui::Text("Shadow Casters attivi: %d", renderer.getShadowCasterCount());
+        // // Esempio se hai una dimensione fissa dell'atlas
+        // ImGui::Text("Shadow Atlas Size: 4096 x 4096"); 
+    }
+
+    // ==========================================
+    // 6. INTERACTIVE CONTROLS
+    // ==========================================
+    if (ImGui::CollapsingHeader("Controls", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // VSync
+        bool vsync = renderer.isVsyncEnabled(); // o variabile locale sincronizzata
+        if (ImGui::Checkbox("Enable VSync", &vsync))
+        {
+            renderer.enVsync(vsync);
+        }
+        
+        // Wireframe
+        static bool wireframe = false; // Gestisci lo stato persistente dove preferisci
+        if (ImGui::Checkbox("Wireframe Mode", &wireframe))
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+        }
+        
+        // Frustum Culling Toggle
+        bool frustumCulling = renderer.isFrustumCullingEnabled();
+        if (ImGui::Checkbox("Enable Frustum Culling (BVH)", &frustumCulling))
+        {
+            renderer.setFrustumCullingEnabled(frustumCulling);
+        }
+        
+        ImGui::Separator();
+        
+        // Clear Color Live
+        static float clearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+        if (ImGui::ColorEdit4("Clear Color", clearColor))
+        {
+            glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+        }
+        
+        ImGui::Separator();
+        
+        // Debug Mode Selector (Radio Buttons o Combo)
+        int currentDebugMode = renderer.getDebugMode(); 
+        ImGui::Text("Debug Render Mode:");
+        
+        // Array di stringhe comodo per il mapping dei tuoi m_debugMode
+        const char* debugModes[] = { 
+            "Disabled (Lit)",   // 0
+            "Albedo",           // 1
+            "Normals",          // 2
+            "Depth",            // 3
+            "Material (R/M/AO)",// 4
+            "Cluster Heatmap",  // 5
+            "Shadow Cascades",  // 6
+            "BVH Bounds"        // 7
+        };
+        
+        // Soluzione pulita con ImGui::Combo
+        if (ImGui::Combo("##debugModeCombo", &currentDebugMode, debugModes, IM_ARRAYSIZE(debugModes)))
+        {
+            renderer.setDebugMode(currentDebugMode);
+        }
+        
+        // In alternativa, se preferisci i Radio Button espliciti uno sotto l'altro:
+        /*
+        for (int i = 0; i < IM_ARRAYSIZE(debugModes); i++)
+        {
+            if (ImGui::RadioButton(debugModes[i], currentDebugMode == i))
+            {
+                renderer.setDebugMode(i);
+            }
+        }
+        */
+    }
 }
 
 void DebugPanel::shutdown()

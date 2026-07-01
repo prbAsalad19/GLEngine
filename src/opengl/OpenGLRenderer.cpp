@@ -109,6 +109,10 @@ void OpenGLRenderer::init()
     }
 
     m_shadowEngine.init();
+
+#ifdef ENGINE_DEBUG_UI
+    glGenQueries(1, &m_primitivesQuery);
+#endif
 }
 
 void OpenGLRenderer::shutdown()
@@ -124,6 +128,10 @@ void OpenGLRenderer::shutdown()
     glDeleteBuffers(1, &m_lightGridSSBO);
     glDeleteBuffers(1, &m_lightIndexListSSBO);  
     glDeleteVertexArrays(1, &m_fullscreenVAO);
+
+#ifdef ENGINE_DEBUG_UI
+    glDeleteQueries(1, &m_primitivesQuery);
+#endif
 
     m_shadowEngine.shutdown();
 }
@@ -182,6 +190,10 @@ void OpenGLRenderer::render(const Scene& scene,
     Frustum frustum;
     frustum.extractFromMatrix(vp);
 
+    m_totalObjectsThisFrame = static_cast<uint32_t>(
+        staticObjects.size() + quasiStaticObjects.size() + 
+        dynamicSlowObjects.size() + dynamicFastObjects.size());
+
     std::vector<uint32_t> visibleIndices;
     visibleIndices.reserve(scene.objects.size());
 
@@ -197,6 +209,8 @@ void OpenGLRenderer::render(const Scene& scene,
         if (frustum.intersectsAABB(world))
             visibleIndices.push_back(i);
     }
+
+    _visibleIndices = visibleIndices.size();
 
     // ── grouping per mesh ─────────────────────────────────────────────────────
     std::unordered_map<MeshHandle, std::vector<std::pair<uint32_t, MaterialHandle>>> groups;
@@ -275,8 +289,19 @@ void OpenGLRenderer::render(const Scene& scene,
     m_shadowEngine.update(lightFrustum, lightManager, camera);
     m_shadowEngine.renderShadowPass(scene, m_resources);
 
+#ifdef ENGINE_DEBUG_UI
+    m_drawCalls = 0;
+    m_drawnTriangles = 0;
+
     // ── geometry e lighting pass ──────────────────────────────────────────────
+    glBeginQuery(GL_PRIMITIVES_GENERATED, m_primitivesQuery);
+#endif
     geometryPass(scene, groups);
+
+#ifdef ENGINE_DEBUG_UI
+    glEndQuery(GL_PRIMITIVES_GENERATED);
+    glGetQueryObjectuiv(m_primitivesQuery, GL_QUERY_RESULT, &m_drawnTriangles);
+#endif
     lightingPass();
 }
 
@@ -364,6 +389,8 @@ void OpenGLRenderer::geometryPass(const Scene& scene,
 
         //-- DRAW ------------------------------------------------------------
         mesh->drawInstanced(static_cast<uint32_t>(instances.size()));
+
+        ++m_drawCalls;
     }
 
     m_geometryShader.unbind();
