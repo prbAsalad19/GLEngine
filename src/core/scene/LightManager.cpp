@@ -30,6 +30,7 @@ LightHandle LightManager::add(const LightDesc& desc)
     m_slots[s].gpuIndex   = gpuIdx;
 
     m_gpuLights.push_back(toGPU(desc));
+    m_cpuDescs.push_back(desc);
     m_isPrimary.push_back(desc.isPrimary);
     m_gpuToSlot.push_back({ s });
 
@@ -46,6 +47,7 @@ void LightManager::update(LightHandle handle, const LightDesc& desc)
 
     uint32_t gpuIdx = m_slots[handle.slot].gpuIndex;
     m_gpuLights[gpuIdx] = toGPU(desc);
+    m_cpuDescs[gpuIdx]  = desc;
     m_isPrimary[gpuIdx] = desc.isPrimary;
     m_dirty = true;
 }
@@ -64,6 +66,7 @@ void LightManager::remove(LightHandle handle)
     {
         // Move last entry into the removed slot
         m_gpuLights[gpuIdx]  = m_gpuLights[lastGpu];
+        m_cpuDescs[gpuIdx]   = m_cpuDescs[lastGpu];
         m_isPrimary[gpuIdx]  = m_isPrimary[lastGpu];
         m_gpuToSlot[gpuIdx]  = m_gpuToSlot[lastGpu];
 
@@ -73,6 +76,7 @@ void LightManager::remove(LightHandle handle)
     }
 
     m_gpuLights.pop_back();
+    m_cpuDescs.pop_back();
     m_isPrimary.pop_back();
     m_gpuToSlot.pop_back();
 

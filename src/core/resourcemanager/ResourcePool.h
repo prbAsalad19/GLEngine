@@ -1,6 +1,7 @@
 #pragma once
 #include "core/CoreConfig.h"
 #include "ResourceHandle.h"
+#include <memory>
 
 template<typename Tag, typename T>
 class ResourcePool
@@ -28,6 +29,28 @@ public:
 				fn(*slot.resource);
 		}
 	}
+	template<typename Func>
+	void getEachActiveSlot(Func&& fn)
+	{
+		size_t i = 0;
+		for (auto& slot : slots)
+		{
+			if (slot.active)
+				fn(i);
+			++i;
+		}
+	}
+
+	template<typename Func>
+	void forEachAlsoInactive(Func&& fn)
+	{
+		for (auto& slot : slots)
+		{
+			fn(*slot.resource);
+		}
+	}
+
+	uint32_t getSlotGeneration(size_t slot) { return slots[slot].generation; }
 
 	uint32_t size() const { return slots.size() - freeList.size(); }
 
@@ -78,6 +101,14 @@ public:
 	    if (cacheIt != cache.end()) cache.erase(cacheIt);
 	
 	    return true;
+	}
+
+	bool update(ResourceHandle<Tag> handle, std::unique_ptr<T> resource)
+	{
+		if (!isValid(handle)) return false;
+
+		slots[handle.slot].resource = std::move(resource);
+		return true;
 	}
 
 private:

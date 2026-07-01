@@ -81,6 +81,31 @@ public:
         if (source) source->playing = false;
     }
 
+    Vector3 getListenerPos() { return m_listener.position; }
+
+    std::vector<AudioSource> getSources() 
+    {
+        std::vector<AudioSource> sources;
+        m_audioSourcePool.forEach([&] (AudioSource& audioSource) { sources.push_back(audioSource); } );
+        return sources;
+    }
+    std::vector<size_t> getActiveSourcesSlots()
+    {
+        std::vector<size_t> slotsIDs;
+        m_audioSourcePool.getEachActiveSlot( [&] (size_t id) { slotsIDs.push_back(id); } );
+        return slotsIDs;
+    } 
+    
+    uint32_t getSourceSlotGeneration(size_t slot)
+    {
+        return m_audioSourcePool.getSlotGeneration(slot);
+    }
+
+    void updateSource(AudioSourceHandle handle, AudioSource source)
+    {
+        m_audioSourcePool.update(handle, std::make_unique<AudioSource>(source));
+    }
+
 private:
 
     float calculateAttenuation(const AudioSource& source) const;

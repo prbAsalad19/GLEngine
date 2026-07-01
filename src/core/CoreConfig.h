@@ -1,5 +1,5 @@
 #pragma once
-// Standard library only — zero graphics API
+// Standard library only ï¿½ zero graphics API
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -12,3 +12,5 @@
 #include <memory>
 #include <cstdint>
 #include <functional>
+
+#define ENGINE_DEBUG_UI

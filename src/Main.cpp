@@ -5,6 +5,7 @@
 #include "core/scene/Scene.h"
 #include "core/assets/Camera.h"
 #include "core/resourcemanager/ResourceManager.h"
+#include "core/scene/Transform.h"
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLUIRenderer.h"
 #include "core/ui/UICanvas.h"
@@ -15,6 +16,7 @@
 #include "core/AudioPipeline/AudioEngine.h"
 #include "core/AudioPipeline/MiniaudioBackend.h"
 #include "core/ecs/EcsSystem.h"
+#include "DebugPanel/DebugPanel.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -79,18 +81,18 @@ int main()
         }
     }
 
-    {
-        Transform t;
-        t.position = { 0.0f, 0.0f, -1.0f };
-        t.scale = { 10.0f, 10.0f, 10.0f };
-        t.setEuler( { 0.0f, 0.0f, 0.0f } );
+    // {
+    //     Transform t;
+    //     t.position = { 0.0f, 0.0f, -1.0f };
+    //     t.scale = { 0.5f, 0.5f, 10.0f };
+    //     t.setEuler( { 0.0f, 0.0f, 0.0f } );
 
-        world.entity()
-                .set<TransformComponent>({ t })
-                .set<MeshComponent>({ meshHandle })
-                .set<MaterialComponent>({ matHandle })
-                .add<StaticTag>();
-    }
+    //     world.entity()
+    //             .set<TransformComponent>({ t })
+    //             .set<MeshComponent>({ meshHandle })
+    //             .set<MaterialComponent>({ matHandle })
+    //             .add<StaticTag>();
+    // }
     
 
     float t = 0.0f;
@@ -110,15 +112,23 @@ int main()
     //lightManager.add(lightDesc);
 
     LightDesc lightDesc_;
-    lightDesc.position = { -2.0f, 0.0f, 0.0f };
-    lightDesc.color = { 1.0f, 1.0f, 1.0f };
-    lightDesc.intensity = 50.0f;
-    lightDesc.radius = 10.0f;
-    lightDesc.type = LightType::Spot;
-    lightDesc.innerAngle = 20.0f;
-    lightDesc.outerAngle = 30.0f;
-    lightDesc.direction = Vector3::normalize({ 0.0f, 0.0f, 0.0f});
-    lightManager.add(lightDesc_);
+    lightDesc_.position = { 0.0f, 0.0f, 5.0f };
+    lightDesc_.color = { 1.0f, 1.0f, 1.0f };
+    lightDesc_.intensity = 50.0f;
+    lightDesc_.radius = 10.0f;
+    lightDesc_.type = LightType::Point;
+    // lightDesc_.innerAngle = 20.0f;
+    // lightDesc_.outerAngle = 30.0f;
+    // lightDesc_.direction = Vector3::normalize({ 0.0f, 0.0f, 0.0f});
+
+    {
+        Transform t;
+        t.position = lightDesc_.position;
+        world.entity()
+            .set<TransformComponent>( {t})
+            .set<LightComponent>( { LightHandle{}, lightDesc_ } );
+        lightManager.add(lightDesc_);
+    }
 
     Camera camera;
     camera.position = { -5.0f, 0.0f, 3.0f };
@@ -251,6 +261,12 @@ int main()
     dynamicBVH.build(dynamicSlowObjects);
 
 
+#ifdef ENGINE_DEBUG_UI
+    DebugPanel debugPanel;
+    debugPanel.init(window);
+#endif
+
+
     renderer.enVsync(true);
 
     while (!glfwWindowShouldClose(window))
@@ -292,7 +308,13 @@ int main()
             inputManager.setCursorLocked(!currentlyLocked);
         }
 
-        if (inputManager.isCursorLocked())
+#ifdef ENGINE_DEBUG_UI
+    bool imguiWantsInput = ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
+#else
+    bool imguiWantsInput = false;
+#endif
+
+        if (inputManager.isCursorLocked() && !imguiWantsInput)
         {
             Vector2 mouseDelta = inputManager.getMouseDelta();
             yaw -= mouseDelta.x * (sensitivity / 100.0f);
@@ -392,12 +414,23 @@ int main()
 
         dynamicBVH.update(dynamicSlowObjects);
         UIrenderer.render(canvas);
+
+#ifdef ENGINE_DEBUG_UI
+        debugPanel.beginFrame();
+        debugPanel.render(camera, lightManager, audioEngine, renderer, staticBVH, dynamicBVH);
+        debugPanel.endFrame();
+#endif
+
         glfwSwapBuffers(window);
     }
 
     UIrenderer.shutdown();
     renderer.shutdown();
     
+#ifdef ENGINE_DEBUG_UI
+    debugPanel.shutdown();
+#endif
+
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

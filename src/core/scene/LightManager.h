@@ -131,6 +131,7 @@ public:
     const std::vector<LightHandle>& getActiveHandles() const { return m_activeHandles; }
     const std::vector<bool>& getIsPrimary() const { return m_isPrimary; }
     bool isPrimary(uint32_t gpuIndex) const { return m_isPrimary[gpuIndex]; }
+    const std::vector<LightDesc>& getCPUDescs() const { return m_cpuDescs; }
 
     // Number of currently active lights.
     uint32_t count() const { return m_activeCount; }
@@ -153,6 +154,8 @@ private:
     std::vector<bool> m_isPrimary;
     std::vector<GPUEntry> m_gpuToSlot;   // parallel to m_gpuLights
     std::vector<LightHandle> m_activeHandles;
+
+    std::vector<LightDesc> m_cpuDescs;
 
     uint32_t m_activeCount = 0;
     bool     m_dirty       = false;
