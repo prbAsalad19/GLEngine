@@ -1,5 +1,5 @@
 #pragma once
-// Standard library only � zero graphics API
+// Standard library only zero graphics API
 #include <iostream>
 #include <fstream>
 #include <sstream>

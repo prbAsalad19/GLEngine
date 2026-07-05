@@ -4,7 +4,7 @@
 #include "ShadowAtlas.h"
 #include "core/scene/Frustum.h"
 #include "core/assets/Camera.h"
-#include "core/scene/Scene.h"
+#include "core/ecs/EcsSystem.h"
 #include "core/resourcemanager/ResourceManager.h"
 #include "opengl/OpenGLShaderProgram.h"
 
@@ -13,7 +13,7 @@ class ShadowEngine
 public:
     void init();
     void update(Frustum frustum, LightManager& lightManager, Camera camera);
-    void renderShadowPass(const Scene& scene, ResourceManager& resources);
+    void renderShadowPass(RenderBuckets& buckets, ResourceManager& resources);
     void bindForLightingPass(int atlasUnit) const;
     void shutdown();
 

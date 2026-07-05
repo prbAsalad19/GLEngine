@@ -8,6 +8,7 @@
 #include "core/bvh/BVHTree.h"
 #include "core/scene/LightManager.h"
 #include "opengl/ShadowMapping/ShadowMapping.h"
+#include "core/ecs/EcsSystem.h"
 #include <unordered_map>
 
 static constexpr uint32_t MAX_RENDER_OBJECTS = 1024;
@@ -73,16 +74,12 @@ public:
     void init();
     void shutdown();
     void onResize(unsigned int width, unsigned int height);
-    void render(const Scene& scene,
-                            LightManager& lightManager, 
-                            const std::vector<RenderObject>& staticObjects,
-                            const std::vector<RenderObject>& quasiStaticObjects,
-                            const std::vector<RenderObject>& dynamicSlowObjects,
+    void render(LightManager& lightManager, 
+                            RenderBuckets& buckets, 
                             const Camera& camera,
                             const BVHTree& staticBVH,
                             const BVHTree& quasiStaticBVH,
-                            const BVHTree& dynamicBVH,
-                            const std::vector<RenderObject>& dynamicFastObjects);
+                            const BVHTree& dynamicBVH);
     
     void enVsync(bool enabled)
     {
@@ -121,8 +118,7 @@ public:
     void setFrustumCullingEnabled(bool enabled) { m_frustumCullingEnabled = enabled; }
 
 private:
-    void geometryPass(const Scene& scene, 
-                        const std::unordered_map<MeshHandle, 
+    void geometryPass(const std::unordered_map<MeshHandle, 
                         std::vector<std::pair<uint32_t, MaterialHandle>>>& groups);
 
     void lightingPass();

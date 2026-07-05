@@ -2,6 +2,7 @@
 #include "core/assets/Material.h"
 #include "core/scene/RenderObject.h"
 #include "opengl/ShadowMapping/ShadowMapping.h"
+#include <unordered_map>
 #include <vector>
 
 
@@ -159,23 +160,21 @@ void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
     m_clustersDirty =  true;
 }
 
-void OpenGLRenderer::render(const Scene& scene,
-                            LightManager& lightManager,
-                            const std::vector<RenderObject>& staticObjects,
-                            const std::vector<RenderObject>& quasiStaticObjects,
-                            const std::vector<RenderObject>& dynamicSlowObjects, 
+void OpenGLRenderer::render(LightManager& lightManager,
+                            RenderBuckets& buckets, 
                             const Camera& camera,
                             const BVHTree& staticBVH,
                             const BVHTree& quasiStaticBVH,
-                            const BVHTree& dynamicBVH,
-                            const std::vector<RenderObject>& dynamicFastObjects)
+                            const BVHTree& dynamicBVH)
 {
     // ripristina sempre lo stato 3D
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
 
-    if (scene.objects.empty()) return;
+    size_t numObjects = buckets.staticObjects.size() + buckets.quasiStaticObjects.size() + 
+        buckets.dynamicSlowObjects.size() + buckets.dynamicFastObjects.size();
+    if (numObjects == 0) return;
 
     // ── matrici camera ────────────────────────────────────────────────────────
     mat4 view              = camera.getViewMatrix();
@@ -190,40 +189,48 @@ void OpenGLRenderer::render(const Scene& scene,
     Frustum frustum;
     frustum.extractFromMatrix(vp);
 
-    m_totalObjectsThisFrame = static_cast<uint32_t>(
-        staticObjects.size() + quasiStaticObjects.size() + 
-        dynamicSlowObjects.size() + dynamicFastObjects.size());
+    m_totalObjectsThisFrame = static_cast<uint32_t>(numObjects);
 
-    std::vector<uint32_t> visibleIndices;
-    visibleIndices.reserve(scene.objects.size());
-
-    staticBVH.query     (frustum, staticObjects,      visibleIndices);
-    quasiStaticBVH.query(frustum, quasiStaticObjects, visibleIndices);
-    dynamicBVH.query    (frustum, dynamicSlowObjects,  visibleIndices);
-
-    for (uint32_t i = 0; i < dynamicFastObjects.size(); i++)
-    {
-        AABB world = AABB::transform(
-            m_resources.getMeshAABB(dynamicFastObjects[i].mesh),
-            dynamicFastObjects[i].transform.getMatrix());
-        if (frustum.intersectsAABB(world))
-            visibleIndices.push_back(i);
-    }
-
-    _visibleIndices = visibleIndices.size();
-
-    // ── grouping per mesh ─────────────────────────────────────────────────────
     std::unordered_map<MeshHandle, std::vector<std::pair<uint32_t, MaterialHandle>>> groups;
 
-    uint32_t index = 0;
-    for (uint32_t objIdx : visibleIndices)
+    uint32_t globalTransformIndex = 0;
+
+    auto processVisibleObjects = [&](const std::vector<RenderObject>& bucket,
+                                  const std::vector<uint32_t>& visibleIndices) 
     {
-        if (index >= MAX_RENDER_OBJECTS) break;
-        const RenderObject& obj = scene.objects[objIdx];
-        m_transformStagingBuffer[index] = obj.transform.getMatrix();
-        groups[obj.mesh].push_back({ index, obj.material });
-        ++index;
+        for (uint32_t idx : visibleIndices)
+        {
+            if (globalTransformIndex >= MAX_RENDER_OBJECTS) break;
+            const RenderObject& obj = bucket[idx];
+            m_transformStagingBuffer[globalTransformIndex] = obj.transform.getMatrix();
+            groups[obj.mesh].push_back({ globalTransformIndex, obj.material });
+            ++globalTransformIndex;
+        }
+    };
+
+    std::vector<uint32_t> staticVisibleIndices;
+    staticBVH.query(frustum, buckets.staticObjects, staticVisibleIndices);
+    processVisibleObjects(buckets.staticObjects, staticVisibleIndices);
+
+    std::vector<uint32_t> quasiVisibleIndices;
+    quasiStaticBVH.query(frustum, buckets.quasiStaticObjects, quasiVisibleIndices);
+    processVisibleObjects(buckets.quasiStaticObjects, staticVisibleIndices);
+
+    std::vector<uint32_t> dynamicSlowVisibleIndices;
+    dynamicBVH.query(frustum, buckets.dynamicSlowObjects, dynamicSlowVisibleIndices);
+    processVisibleObjects(buckets.dynamicSlowObjects, staticVisibleIndices);
+
+    std::vector<uint32_t> dynamicFastVisibleIndices;
+    for (uint32_t i = 0; i < buckets.dynamicFastObjects.size(); ++i)
+    {
+        const RenderObject& obj = buckets.dynamicFastObjects[i];
+        AABB world = AABB::transform(m_resources.getMeshAABB(obj.mesh), obj.transform.getMatrix());
+        if (frustum.intersectsAABB(world))
+            dynamicFastVisibleIndices.push_back(i);
     }
+    processVisibleObjects(buckets.dynamicFastObjects, dynamicFastVisibleIndices);
+
+    _visibleIndices = globalTransformIndex;
 
     // ── upload camera UBO ─────────────────────────────────────────────────────
     CameraUBOData cameraData;
@@ -287,7 +294,7 @@ void OpenGLRenderer::render(const Scene& scene,
     Frustum lightFrustum;
     lightFrustum.extractFromMatrix(vp);
     m_shadowEngine.update(lightFrustum, lightManager, camera);
-    m_shadowEngine.renderShadowPass(scene, m_resources);
+    //m_shadowEngine.renderShadowPass(buckets, m_resources);
 
 #ifdef ENGINE_DEBUG_UI
     m_drawCalls = 0;
@@ -296,7 +303,7 @@ void OpenGLRenderer::render(const Scene& scene,
     // ── geometry e lighting pass ──────────────────────────────────────────────
     glBeginQuery(GL_PRIMITIVES_GENERATED, m_primitivesQuery);
 #endif
-    geometryPass(scene, groups);
+    geometryPass(groups);
 
 #ifdef ENGINE_DEBUG_UI
     glEndQuery(GL_PRIMITIVES_GENERATED);
@@ -305,8 +312,7 @@ void OpenGLRenderer::render(const Scene& scene,
     lightingPass();
 }
 
-void OpenGLRenderer::geometryPass(const Scene& scene, 
-                                    const std::unordered_map<MeshHandle, std::vector<std::pair<uint32_t, MaterialHandle>>>& groups)
+void OpenGLRenderer::geometryPass(const std::unordered_map<MeshHandle, std::vector<std::pair<uint32_t, MaterialHandle>>>& groups)
 {
 
     glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);

@@ -57,6 +57,8 @@ int main()
 
     world.set<ResourceManagerSingleton>({ &resources});
     world.set<LightManagerSingleton>({ &lightManager });
+    world.set<RenderBuckets>({});
+    registerRenderExtractSystems(world);
 
     MeshHandle     meshHandle = resources.loadMesh("assets/teapot_with_uv.obj");
     TextureHandle  texHandle = resources.loadTexture("img/whiteTexture.png");
@@ -173,7 +175,7 @@ int main()
         true                     // looping
     );
 
-    audioEngine.play(sourceHandle);
+    //audioEngine.play(sourceHandle);
 
 
     world.set<AudioEngineSingleton>({ &audioEngine }); //setting up the engine in the ecs system
@@ -228,37 +230,48 @@ int main()
     //             << aabb.bounds[1].x << " " << aabb.bounds[1].y << " " << aabb.bounds[1].z << "\n";
     // }
 
-    // build bvh
-    // fuori dal loop — solo per il BVH build iniziale
-    std::vector<RenderObject> staticObjects;
-    std::vector<RenderObject> quasiStaticObjects;
-    std::vector<RenderObject> dynamicSlowObjects;
-    std::vector<RenderObject> dynamicFastObjects;
+    // // build bvh
+    // // fuori dal loop — solo per il BVH build iniziale
+    // std::vector<RenderObject> staticObjects;
+    // std::vector<RenderObject> quasiStaticObjects;
+    // std::vector<RenderObject> dynamicSlowObjects;
+    // std::vector<RenderObject> dynamicFastObjects;
 
-    // query per popolarli prima del build
-    world.each([&](flecs::entity e,
-                TransformComponent& t,
-                MeshComponent& m,
-                MaterialComponent& mat)
-    {
-        RenderObject obj;
-        obj.mesh = m.handle;
-        obj.material = mat.handle;
-        obj.transform = t.transform;
+    // // query per popolarli prima del build
+    // world.each([&](flecs::entity e,
+    //             TransformComponent& t,
+    //             MeshComponent& m,
+    //             MaterialComponent& mat)
+    // {
+    //     RenderObject obj;
+    //     obj.mesh = m.handle;
+    //     obj.material = mat.handle;
+    //     obj.transform = t.transform;
 
-        if      (e.has<StaticTag>())      staticObjects.push_back(obj);
-        else if (e.has<QuasiStaticTag>()) quasiStaticObjects.push_back(obj);
-        else if (e.has<DynamicSlowTag>()) dynamicSlowObjects.push_back(obj);
-        else if (e.has<DynamicFastTag>()) dynamicFastObjects.push_back(obj);
-    });
+    //     if      (e.has<StaticTag>())      staticObjects.push_back(obj);
+    //     else if (e.has<QuasiStaticTag>()) quasiStaticObjects.push_back(obj);
+    //     else if (e.has<DynamicSlowTag>()) dynamicSlowObjects.push_back(obj);
+    //     else if (e.has<DynamicFastTag>()) dynamicFastObjects.push_back(obj);
+    // });
+    RenderBuckets buckets = world.get<RenderBuckets>();
 
     BVHTree staticBVH    (resources, BVHType::Static);
     BVHTree quasiStaticBVH (resources, BVHType::QuasiStatic);
     BVHTree dynamicBVH   (resources, BVHType::DynamicSlow);
 
-    staticBVH.build(staticObjects);
-    quasiStaticBVH.build(quasiStaticObjects);
-    dynamicBVH.build(dynamicSlowObjects);
+    staticBVH.build(buckets.staticObjects);
+    quasiStaticBVH.build(buckets.quasiStaticObjects);
+    dynamicBVH.build(buckets.dynamicSlowObjects);
+
+
+    std::cout << buckets.staticObjects[0].transform.position.x << std::endl;
+    std::cout << "=================================================" << std::endl;
+    std::cout << "Static Objects:" << buckets.staticObjects.size() << std::endl;
+    for (auto& obj : buckets.staticObjects)
+    {
+        std::cout << obj.mesh.slot << " | " << obj.transform.position.entries << std::endl;
+    }
+    std::cout << "=================================================" << std::endl;
 
 
 #ifdef ENGINE_DEBUG_UI
@@ -301,6 +314,8 @@ int main()
             timeAccum = 0.0f;
             fpsCount = 0;
         }
+
+        world.progress(dt);
 
         if (inputManager.isKeyPressed(GLFW_KEY_ESCAPE))
         {
@@ -381,39 +396,15 @@ int main()
 
         world.set<CameraComponent>( { camera });
 
-        std::vector<RenderObject> staticObjects;
-        std::vector<RenderObject> quasiStaticObjects;
-        std::vector<RenderObject> dynamicSlowObjects;
-        std::vector<RenderObject> dynamicFastObjects;
+        buckets = world.get<RenderBuckets>();
 
-        Scene scene;
-        world.each([&](flecs::entity e,
-                    TransformComponent& t,
-                    MeshComponent& m,
-                    MaterialComponent& mat)
-        {
-            RenderObject obj;
-            obj.mesh = m.handle;
-            obj.material = mat.handle;
-            obj.transform = t.transform;
-
-            if      (e.has<StaticTag>())      staticObjects.push_back(obj);
-            else if (e.has<QuasiStaticTag>()) quasiStaticObjects.push_back(obj);
-            else if (e.has<DynamicSlowTag>()) dynamicSlowObjects.push_back(obj);
-            else if (e.has<DynamicFastTag>()) dynamicFastObjects.push_back(obj);
-
-            scene.objects.push_back(obj);
-        });
-
-        renderer.render(scene, lightManager, 
-                staticObjects, 
-                quasiStaticObjects, 
-                dynamicSlowObjects, 
-                camera, staticBVH, quasiStaticBVH, dynamicBVH, dynamicFastObjects);
-        renderer.fps = fpsCount;
+        renderer.render(lightManager, 
+                buckets,
+                camera, staticBVH, quasiStaticBVH, dynamicBVH);
+        renderer.fps = currentFps;
         renderer.dt = dt;
 
-        dynamicBVH.update(dynamicSlowObjects);
+        dynamicBVH.update(buckets.dynamicSlowObjects);
         UIrenderer.render(canvas);
 
 #ifdef ENGINE_DEBUG_UI

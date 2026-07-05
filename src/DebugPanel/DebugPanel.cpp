@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#ifdef ENGINE_DEBUG_UI
+
 void DebugPanel::init(GLFWwindow* window)
 {
     IMGUI_CHECKVERSION();
@@ -437,3 +439,5 @@ void DebugPanel::shutdown()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
+
+#endif

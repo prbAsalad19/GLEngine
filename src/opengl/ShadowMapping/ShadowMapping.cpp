@@ -1,4 +1,5 @@
 #include "ShadowMapping.h"
+#include "core/ecs/EcsSystem.h"
 #include "core/scene/Frustum.h"
 #include "core/scene/LightManager.h"
 #include <iostream>
@@ -119,7 +120,7 @@ void ShadowEngine::update(Frustum frustum, LightManager& lightManager, Camera ca
     }
 }
 
-void ShadowEngine::renderShadowPass(const Scene& scene, ResourceManager& resources)
+void ShadowEngine::renderShadowPass(RenderBuckets& buckets, ResourceManager& resources)
 {
     if (m_casters.empty()) return;
 
@@ -148,18 +149,19 @@ void ShadowEngine::renderShadowPass(const Scene& scene, ResourceManager& resourc
 
         m_depthShader->setMat4("lightSpaceMatrix", caster.lightSpaceMatrix);
 
-        for (const auto& obj : scene.objects)
-        {
-            OpenGLMesh* mesh = resources.getMesh(obj.mesh);
-            if (!mesh) continue;
+        // for (const auto& obj : scene.objects)
+        
+        // {
+        //     OpenGLMesh* mesh = resources.getMesh(obj.mesh);
+        //     if (!mesh) continue;
 
-            // upload transform — slot 0 del TransformUBO
-            mat4 model = obj.transform.getMatrix();
-            // usiamo un UBO dedicato o un semplice uniform
-            m_depthShader->setMat4("model", model);
+        //     // upload transform — slot 0 del TransformUBO
+        //     mat4 model = obj.transform.getMatrix();
+        //     // usiamo un UBO dedicato o un semplice uniform
+        //     m_depthShader->setMat4("model", model);
 
-            mesh->draw();
-        }
+        //     mesh->draw();
+        // }
     }
 
     m_depthShader->unbind();

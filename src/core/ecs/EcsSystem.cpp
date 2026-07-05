@@ -31,4 +31,5 @@ void registerComponents(flecs::world& world)
     world.component<ResourceManagerSingleton>();
     world.component<LightManagerSingleton>();
     world.component<AudioEngineSingleton>();
+    world.component<RenderBuckets>();
 }
