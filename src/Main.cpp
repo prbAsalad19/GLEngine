@@ -253,6 +253,7 @@ int main()
     //     else if (e.has<DynamicSlowTag>()) dynamicSlowObjects.push_back(obj);
     //     else if (e.has<DynamicFastTag>()) dynamicFastObjects.push_back(obj);
     // });
+    world.progress(0.0f + 1.0f );
     RenderBuckets buckets = world.get<RenderBuckets>();
 
     BVHTree staticBVH    (resources, BVHType::Static);
@@ -264,14 +265,14 @@ int main()
     dynamicBVH.build(buckets.dynamicSlowObjects);
 
 
-    std::cout << buckets.staticObjects[0].transform.position.x << std::endl;
-    std::cout << "=================================================" << std::endl;
-    std::cout << "Static Objects:" << buckets.staticObjects.size() << std::endl;
-    for (auto& obj : buckets.staticObjects)
-    {
-        std::cout << obj.mesh.slot << " | " << obj.transform.position.entries << std::endl;
-    }
-    std::cout << "=================================================" << std::endl;
+    //std::cout << buckets.staticObjects[0].transform.position.x << std::endl;
+    // std::cout << "=================================================" << std::endl;
+    // std::cout << "Static Objects:" << buckets.staticObjects.size() << std::endl;
+    // for (auto& obj : buckets.staticObjects)
+    // {
+    //     std::cout << obj.mesh.slot << " | " << obj.transform.position.entries << std::endl;
+    // }
+    // std::cout << "=================================================" << std::endl;
 
 
 #ifdef ENGINE_DEBUG_UI
@@ -397,6 +398,17 @@ int main()
         world.set<CameraComponent>( { camera });
 
         buckets = world.get<RenderBuckets>();
+
+
+        // std::cout << buckets.staticObjects[0].transform.position.x << std::endl;
+        // std::cout << "=================================================" << std::endl;
+        // std::cout << "Static Objects:" << buckets.staticObjects.size() << std::endl;
+        // for (auto& obj : buckets.staticObjects)
+        // {
+        //     std::cout << obj.mesh.slot << " | " << obj.transform.position.entries << std::endl;
+        // }
+        // std::cout << "=================================================" << std::endl;
+
 
         renderer.render(lightManager, 
                 buckets,

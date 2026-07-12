@@ -214,11 +214,11 @@ void OpenGLRenderer::render(LightManager& lightManager,
 
     std::vector<uint32_t> quasiVisibleIndices;
     quasiStaticBVH.query(frustum, buckets.quasiStaticObjects, quasiVisibleIndices);
-    processVisibleObjects(buckets.quasiStaticObjects, staticVisibleIndices);
+    processVisibleObjects(buckets.quasiStaticObjects, quasiVisibleIndices);
 
     std::vector<uint32_t> dynamicSlowVisibleIndices;
     dynamicBVH.query(frustum, buckets.dynamicSlowObjects, dynamicSlowVisibleIndices);
-    processVisibleObjects(buckets.dynamicSlowObjects, staticVisibleIndices);
+    processVisibleObjects(buckets.dynamicSlowObjects, dynamicSlowVisibleIndices);
 
     std::vector<uint32_t> dynamicFastVisibleIndices;
     for (uint32_t i = 0; i < buckets.dynamicFastObjects.size(); ++i)
