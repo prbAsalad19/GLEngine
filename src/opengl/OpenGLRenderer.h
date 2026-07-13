@@ -75,7 +75,7 @@ public:
     void shutdown();
     void onResize(unsigned int width, unsigned int height);
     void render(LightManager& lightManager, 
-                            RenderBuckets& buckets, 
+                            const RenderBuckets *buckets, 
                             const Camera& camera,
                             const BVHTree& staticBVH,
                             const BVHTree& quasiStaticBVH,

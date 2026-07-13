@@ -35,6 +35,7 @@ void DebugPanel::endFrame()
 }
 
 void DebugPanel::render(Camera& camera,
+                const double& now,
                 LightManager& lightManager,
                 AudioEngine& audioEngine,
                 OpenGLRenderer& renderer,
@@ -69,7 +70,7 @@ void DebugPanel::render(Camera& camera,
         }
         if (ImGui::BeginTabItem("Renderer"))
         {
-            drawRendererPanel(renderer);
+            drawRendererPanel(renderer, now);
             ImGui::EndTabItem();
         }
         
@@ -221,7 +222,7 @@ void DebugPanel::drawAudioPanel(AudioEngine& audioEngine)
         }
     }
 }
-void DebugPanel::drawRendererPanel(OpenGLRenderer& renderer)
+void DebugPanel::drawRendererPanel(OpenGLRenderer& renderer, const double& now)
 {
 // ==========================================
     // 1. GPU INFO
@@ -271,6 +272,7 @@ void DebugPanel::drawRendererPanel(OpenGLRenderer& renderer)
         
         ImGui::Text("Performance: %.1f FPS (%.2f ms)", fps, dtMs);
         ImGui::Separator();
+        ImGui::Text("Up time: %.2f", now);
         
         // Contatori geometrici
         ImGui::Text("Draw Calls: %d", renderer.getDrawCalls());

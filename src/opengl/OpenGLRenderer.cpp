@@ -161,7 +161,7 @@ void OpenGLRenderer::onResize(unsigned int width, unsigned int height)
 }
 
 void OpenGLRenderer::render(LightManager& lightManager,
-                            RenderBuckets& buckets, 
+                            const RenderBuckets *buckets, 
                             const Camera& camera,
                             const BVHTree& staticBVH,
                             const BVHTree& quasiStaticBVH,
@@ -172,8 +172,8 @@ void OpenGLRenderer::render(LightManager& lightManager,
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
 
-    size_t numObjects = buckets.staticObjects.size() + buckets.quasiStaticObjects.size() + 
-        buckets.dynamicSlowObjects.size() + buckets.dynamicFastObjects.size();
+    size_t numObjects = buckets->staticObjects.size() + buckets->quasiStaticObjects.size() + 
+        buckets->dynamicSlowObjects.size() + buckets->dynamicFastObjects.size();
     if (numObjects == 0) return;
 
     // ── matrici camera ────────────────────────────────────────────────────────
@@ -209,26 +209,26 @@ void OpenGLRenderer::render(LightManager& lightManager,
     };
 
     std::vector<uint32_t> staticVisibleIndices;
-    staticBVH.query(frustum, buckets.staticObjects, staticVisibleIndices);
-    processVisibleObjects(buckets.staticObjects, staticVisibleIndices);
+    staticBVH.query(frustum, buckets->staticObjects, staticVisibleIndices);
+    processVisibleObjects(buckets->staticObjects, staticVisibleIndices);
 
     std::vector<uint32_t> quasiVisibleIndices;
-    quasiStaticBVH.query(frustum, buckets.quasiStaticObjects, quasiVisibleIndices);
-    processVisibleObjects(buckets.quasiStaticObjects, quasiVisibleIndices);
+    quasiStaticBVH.query(frustum, buckets->quasiStaticObjects, quasiVisibleIndices);
+    processVisibleObjects(buckets->quasiStaticObjects, quasiVisibleIndices);
 
     std::vector<uint32_t> dynamicSlowVisibleIndices;
-    dynamicBVH.query(frustum, buckets.dynamicSlowObjects, dynamicSlowVisibleIndices);
-    processVisibleObjects(buckets.dynamicSlowObjects, dynamicSlowVisibleIndices);
+    dynamicBVH.query(frustum, buckets->dynamicSlowObjects, dynamicSlowVisibleIndices);
+    processVisibleObjects(buckets->dynamicSlowObjects, dynamicSlowVisibleIndices);
 
     std::vector<uint32_t> dynamicFastVisibleIndices;
-    for (uint32_t i = 0; i < buckets.dynamicFastObjects.size(); ++i)
+    for (uint32_t i = 0; i < buckets->dynamicFastObjects.size(); ++i)
     {
-        const RenderObject& obj = buckets.dynamicFastObjects[i];
+        const RenderObject& obj = buckets->dynamicFastObjects[i];
         AABB world = AABB::transform(m_resources.getMeshAABB(obj.mesh), obj.transform.getMatrix());
         if (frustum.intersectsAABB(world))
             dynamicFastVisibleIndices.push_back(i);
     }
-    processVisibleObjects(buckets.dynamicFastObjects, dynamicFastVisibleIndices);
+    processVisibleObjects(buckets->dynamicFastObjects, dynamicFastVisibleIndices);
 
     _visibleIndices = globalTransformIndex;
 

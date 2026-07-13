@@ -253,16 +253,17 @@ int main()
     //     else if (e.has<DynamicSlowTag>()) dynamicSlowObjects.push_back(obj);
     //     else if (e.has<DynamicFastTag>()) dynamicFastObjects.push_back(obj);
     // });
-    world.progress(0.0f + 1.0f );
-    RenderBuckets buckets = world.get<RenderBuckets>();
+    world.progress(0.0f);
+    const RenderBuckets* buckets = &world.get<RenderBuckets>();
 
     BVHTree staticBVH    (resources, BVHType::Static);
     BVHTree quasiStaticBVH (resources, BVHType::QuasiStatic);
     BVHTree dynamicBVH   (resources, BVHType::DynamicSlow);
 
-    staticBVH.build(buckets.staticObjects);
-    quasiStaticBVH.build(buckets.quasiStaticObjects);
-    dynamicBVH.build(buckets.dynamicSlowObjects);
+    staticBVH.build(buckets->staticObjects);
+    world.get_mut<RenderBuckets>().staticJustRebuilt = false;
+    quasiStaticBVH.build(buckets->quasiStaticObjects);
+    dynamicBVH.build(buckets->dynamicSlowObjects);
 
 
     //std::cout << buckets.staticObjects[0].transform.position.x << std::endl;
@@ -283,6 +284,7 @@ int main()
 
     renderer.enVsync(true);
 
+    bool done = false;
     while (!glfwWindowShouldClose(window))
     {
         double now = glfwGetTime();
@@ -316,7 +318,39 @@ int main()
             fpsCount = 0;
         }
 
+        if (now > 8.0f && !done)   
+        {
+            std::cout << "addedEntity" << std::endl;
+            Transform t;
+            t.position = { 1.0f, 1.0f, 1.0f};
+            t.scale = { 0.5f, 0.5f, 0.5f };
+            t.setEuler({ 90.0f, 0.0f, 90.0f });
+
+            world.entity()
+                .set<TransformComponent>({ t })
+                .set<MeshComponent>({ meshHandle })
+                .set<MaterialComponent>({ matHandle })
+                .add<StaticTag>();
+
+            world.get_mut<RenderBuckets>().staticObjects.clear();
+            world.get_mut<RenderBuckets>().staticDirty = true;
+            done = true;
+        }     
+
         world.progress(dt);
+        buckets = &world.get<RenderBuckets>();
+        if (buckets->staticJustRebuilt)
+        {
+            //world.get_mut<RenderBuckets>().staticObjects.clear();
+            staticBVH.build(buckets->staticObjects);
+            world.get_mut<RenderBuckets>().staticJustRebuilt = false;
+        }
+        if (buckets->quasiStaticJustRebuilt)
+        {
+            //world.get_mut<RenderBuckets>().staticObjects.clear();
+            staticBVH.build(buckets->quasiStaticObjects);
+            world.get_mut<RenderBuckets>().quasiStaticJustRebuilt = false;
+        }
 
         if (inputManager.isKeyPressed(GLFW_KEY_ESCAPE))
         {
@@ -397,9 +431,6 @@ int main()
 
         world.set<CameraComponent>( { camera });
 
-        buckets = world.get<RenderBuckets>();
-
-
         // std::cout << buckets.staticObjects[0].transform.position.x << std::endl;
         // std::cout << "=================================================" << std::endl;
         // std::cout << "Static Objects:" << buckets.staticObjects.size() << std::endl;
@@ -408,7 +439,7 @@ int main()
         //     std::cout << obj.mesh.slot << " | " << obj.transform.position.entries << std::endl;
         // }
         // std::cout << "=================================================" << std::endl;
-
+        buckets = &world.get<RenderBuckets>();
 
         renderer.render(lightManager, 
                 buckets,
@@ -416,12 +447,13 @@ int main()
         renderer.fps = currentFps;
         renderer.dt = dt;
 
-        dynamicBVH.update(buckets.dynamicSlowObjects);
+        dynamicBVH.update(buckets->dynamicSlowObjects);
         UIrenderer.render(canvas);
 
 #ifdef ENGINE_DEBUG_UI
         debugPanel.beginFrame();
         debugPanel.render(camera, 
+                now,
                 lightManager, 
                 audioEngine, 
                 renderer, 

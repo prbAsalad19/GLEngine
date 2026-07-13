@@ -74,6 +74,11 @@ struct RenderBuckets
         dynamicSlowObjects.clear();
         dynamicFastObjects.clear();
     }
+
+    bool staticDirty = true;
+    bool quasiStaticDirty = true;
+    bool staticJustRebuilt = false;
+    bool quasiStaticJustRebuilt = false;
 };
 
 inline void registerRenderExtractSystems(flecs::world& world)
@@ -82,19 +87,72 @@ inline void registerRenderExtractSystems(flecs::world& world)
         .kind(flecs::OnLoad)
         .run([](flecs::iter& it)
         {
-            it.world().get_mut<RenderBuckets>().clear();
+            it.world().get_mut<RenderBuckets>().dynamicSlowObjects.clear();
+            it.world().get_mut<RenderBuckets>().dynamicFastObjects.clear();
         });
 
-    world.system<TransformComponent, MeshComponent, MaterialComponent>("ExtractRenderObjects")
-        .kind(flecs::PostUpdate) // dopo che input/fisica hanno già modificato i transform
+    world.system<TransformComponent, MeshComponent, MaterialComponent, StaticTag>("ExtractStaticObjects")
+    .kind(flecs::OnUpdate)
+    .run([](flecs::iter& it)
+    {
+        RenderBuckets& buckets = it.world().get_mut<RenderBuckets>();
+        
+        buckets.staticJustRebuilt = true;
+        if (!buckets.staticDirty) return;
+
+        while (it.next())
+        {
+            auto t   = it.field<TransformComponent>(0);
+            auto m   = it.field<MeshComponent>(1);
+            auto mat = it.field<MaterialComponent>(2);
+
+            for (auto i : it)
+            {
+                buckets.staticObjects.push_back({ m[i].handle, mat[i].handle, t[i].transform });
+            }
+        }
+
+        buckets.staticDirty = false;
+    });
+
+    world.system<TransformComponent, MeshComponent, MaterialComponent, QuasiStaticTag>("ExtractQuasiStaticObjects")
+    .kind(flecs::OnUpdate)
+    .run([](flecs::iter& it)
+    {
+        RenderBuckets& buckets = it.world().get_mut<RenderBuckets>();
+        buckets.quasiStaticJustRebuilt = true;
+        if (!buckets.quasiStaticDirty) return;
+
+        while (it.next())
+        {
+            auto t   = it.field<TransformComponent>(0);
+            auto m   = it.field<MeshComponent>(1);
+            auto mat = it.field<MaterialComponent>(2);
+
+            for (auto i : it)
+            {
+                buckets.quasiStaticObjects.push_back({ m[i].handle, mat[i].handle, t[i].transform });
+            }
+        }
+
+        buckets.quasiStaticDirty = false;
+    });
+
+    world.system<TransformComponent, MeshComponent, MaterialComponent>("ExtractDynamicSlowObjects")
+        .with<DynamicSlowTag>()
+        .kind(flecs::PostUpdate)
         .each([](flecs::entity e, TransformComponent& t, MeshComponent& m, MaterialComponent& mat)
         {
-            RenderObject obj{ m.handle, mat.handle, t.transform };
             RenderBuckets& buckets = e.world().get_mut<RenderBuckets>();
+            buckets.dynamicSlowObjects.push_back({ m.handle, mat.handle, t.transform });
+        });
 
-            if      (e.has<StaticTag>())      buckets.staticObjects.push_back(obj);
-            else if (e.has<QuasiStaticTag>()) buckets.quasiStaticObjects.push_back(obj);
-            else if (e.has<DynamicSlowTag>()) buckets.dynamicSlowObjects.push_back(obj);
-            else if (e.has<DynamicFastTag>()) buckets.dynamicFastObjects.push_back(obj);
+    world.system<TransformComponent, MeshComponent, MaterialComponent>("ExtractDynamicFastObjects")
+        .with<DynamicFastTag>()
+        .kind(flecs::PostUpdate)
+        .each([](flecs::entity e, TransformComponent& t, MeshComponent& m, MaterialComponent& mat)
+        {
+            RenderBuckets& buckets = e.world().get_mut<RenderBuckets>();
+            buckets.dynamicFastObjects.push_back({ m.handle, mat.handle, t.transform });
         });
 }

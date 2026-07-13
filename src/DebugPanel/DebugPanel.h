@@ -25,6 +25,7 @@ public:
     void shutdown();
 
     void render(Camera& camera,
+                const double& now,
                 LightManager& lightManager,
                 AudioEngine& audioEngine,
                 OpenGLRenderer& renderer,
@@ -43,7 +44,7 @@ private:
     void drawLightPanel(LightManager& lightManager);
     void drawBVHPanel(const BVHTree& staticBVH, const BVHTree& quasiStaticBVH, const BVHTree& dynamicBVH, const size_t visibleIndicesSize);
     void drawAudioPanel(AudioEngine& audioEngine);
-    void drawRendererPanel(OpenGLRenderer& renderer);
+    void drawRendererPanel(OpenGLRenderer& renderer, const double& now);
     void drawMatrix4x4(const mat4& m);
 
     uint32_t m_viewportWidth  = 1280;
